@@ -252,9 +252,9 @@ int main(int argc, char** argv)
         DataLogStream << "}" << std::endl;
         DataLogStream << "------------------------------------------------------------------" << std::endl;
 
-        ///////////////////////////////////////////////////////////////////////////////
-        // Step 1: Read in the training and testing images
-        ///////////////////////////////////////////////////////////////////////////////
+//-----------------------------------------------------------------------------
+// Read in the training and testing images
+//-----------------------------------------------------------------------------
 
         // parse through the supplied training csv file
         parse_group_csv_file(train_inputfile, '{', '}', training_file);
@@ -474,10 +474,9 @@ int main(int argc, char** argv)
         //    //dlib::sleep(800);
         //}
 
-
-        ///////////////////////////////////////////////////////////////////////////////
-        // Step 2: Setup the network
-        ///////////////////////////////////////////////////////////////////////////////
+//-----------------------------------------------------------------------------
+// Setup the network
+//-----------------------------------------------------------------------------
 
         // this sets th GPUs to use algorithms that are smaller in memory but may take a little longer to execute
         dlib::set_dnn_prefer_smallest_algorithms();
@@ -486,20 +485,7 @@ int main(int argc, char** argv)
         if (gpu.size() == 1)
             dlib::cuda::set_device(gpu[0]);
 
-        // set the initial and final learning rates
-        //double intial_learning_rate = 0.0001;
-        //double final_learning_rate = 0.0001*intial_learning_rate;
-
-        // The MMOD algorithm has some options you can set to control its behavior.  However,
-        // you can also call the constructor with your training annotations and a "target
-        // object size" and it will automatically configure itself in a reasonable way for your
-        // problem.  Here we are saying that faces are still recognizably faces when they are
-        // 40x40 pixels in size.  You should generally pick the smallest size where this is
-        // true.  Based on this information the mmod_options constructor will automatically
-        // pick a good sliding window width and height.  It will also automatically set the
-        // non-max-suppression parameters to something reasonable.  For further details see the
-        // mmod_options documentation.
-
+        // For further details see the mmod_options documentation.
         dlib::mmod_options options(train_labels, target_size.second, target_size.first, 0.75);
 
         // example of how to push back a custion window
@@ -510,8 +496,6 @@ int main(int argc, char** argv)
         options.truth_match_iou_threshold = 0.40;
         options.overlaps_nms = dlib::test_box_overlap(0.4, 1.0);
 
-        // The detector will automatically decide to use multiple sliding windows if needed.
-        // For the face data, only one is needed however.
         std::cout << std::endl << "------------------------------------------------------------------" << std::endl;
         DataLogStream << std::endl << "------------------------------------------------------------------" << std::endl;
 
@@ -534,17 +518,17 @@ int main(int argc, char** argv)
 
         // Now we are ready to create our network and trainer.
 #if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
-        yj_net_type net;
+        net_type net;
 
         // load in the convolutional filter numbers from the input file
         config_net(net, options, filter_num);
 #else
         // check for the gcc version
         #if defined(__GNUC__) && (__GNUC__ > 5)
-            ml_net_type net(options);
+            net_type net(options);
             //config_net(net, options, filter_num);
         #else
-            ml_net_type net;
+            net_type net;
             config_net(net, options, filter_num);
         #endif
 #endif
@@ -564,15 +548,11 @@ int main(int argc, char** argv)
         // set the batch normalization stats window to something big
         dlib::set_all_bn_running_stats_window_sizes(net, 1000);
 
-        // Now let's train the network.  We are going to use mini-batches of 150
-        // images.   The images are random crops from our training set (see
-        // random_cropper_ex.cpp for a discussion of the random_cropper).
+		// containers to store the random crops used during each training iteration
         std::vector<dlib::matrix<dlib::rgb_pixel>> train_batch_samples, test_batch_samples;
         std::vector<std::vector<dlib::mmod_rect>> train_batch_labels, test_batch_labels;
 
         dlib::random_cropper cropper;
-        //dlib::random_array_cropper cropper;
-        //enhanced_array_cropper cropper;
 
         cropper.set_seed(time(NULL));
 
@@ -780,7 +760,6 @@ int main(int argc, char** argv)
         stop_time = chrono::system_clock::now();
         elapsed_time = chrono::duration_cast<d_sec>(stop_time - start_time);
 
-
         // wait for training threads to stop
         trainer.get_net();
 
@@ -788,13 +767,13 @@ int main(int argc, char** argv)
         std::cout << "Elapsed Training Time: " << elapsed_time.count() / 3600 << " hours" << std::endl;
         std::cout << "Stop Code: " << stop_codes[stop] << std::endl;
         std::cout << "Final Average Loss: " << trainer.get_average_loss() << std::endl;
-         std::cout << "------------------------------------------------------------------" << std::endl << std::endl;
+        std::cout << "------------------------------------------------------------------" << std::endl << std::endl;
 
         DataLogStream << "------------------------------------------------------------------" << std::endl;
         DataLogStream << "Elapsed Training Time: " << elapsed_time.count() / 3600 << " hours" << std::endl;
         DataLogStream << "Stop Code: " << stop_codes[stop] << std::endl;
         DataLogStream << "Final Average Loss: " << trainer.get_average_loss() << std::endl;
-         DataLogStream << "------------------------------------------------------------------" << std::endl << std::endl;
+        DataLogStream << "------------------------------------------------------------------" << std::endl << std::endl;
 
         // Save the network to disk
         net.clean();
@@ -805,7 +784,7 @@ int main(int argc, char** argv)
 //-----------------------------------------------------------------------------
 
         // load the network from the saved file
-        ayj_net_type test_net;
+        anet_type test_net;
 
         std::cout << std::endl << "Loading " << (sync_save_location + net_name) << std::endl;
         dlib::deserialize(sync_save_location + net_name) >> test_net;
@@ -818,9 +797,6 @@ int main(int argc, char** argv)
 
         //---------------------------------------------------------------------------------------
         std::cout << "Analyzing Training Results..." << std::endl;
-
-        //trainingResults = eval_all_net_performance(test_net, train_images, train_labels, dnn_train_labels, min_target_size);
-
 
         training_results = dlib::zeros_matrix<double>(1, 6);
 
@@ -851,16 +827,17 @@ int main(int argc, char** argv)
             DataLogStream << "Classification Time (s): " << elapsed_time.count() << std::endl;
             DataLogStream << "Results: " << std::fixed << std::setprecision(4) << tr(0, 0) << ", " << tr(0, 3) << ", " << tr(0, 4) << ", " << tr(0, 5) << std::endl;
 
-            //dnn_train_labels.push_back(dnn_labels);
-
             //overlay the dnn detections on the image
+			std::string results = num2str(idx, "%04d");
             for (jdx = 0; jdx < dnn_labels.size(); ++jdx)
             {
                 win.add_overlay(dnn_labels[jdx].rect, dlib::rgb_pixel(255, 0, 0));
                 draw_rectangle(tmp_img, dnn_labels[jdx].rect, dlib::rgb_pixel(255, 0, 0),2);
                 DataLogStream << "Detect Confidence Level (" << dnn_labels[jdx].label << "): " << dnn_labels[jdx].detection_confidence << std::endl;
                 std::cout << "Detect Confidence Level (" << dnn_labels[jdx].label << "): " << dnn_labels[jdx].detection_confidence << std::endl;
+				results = results + ",{" + num2str(dnn_labels[jdx].rect.left(),"%d,") + num2str(dnn_labels[jdx].rect.top(),"%d,") + num2str(dnn_labels[jdx].rect.width(),"%d,") + num2str(dnn_labels[jdx].rect.height(),"%d,") + dnn_labels[jdx].label + "},";
             }
+			DataLogStream << results.substr(0,results.length()-2) << std::endl; 
 
             // overlay the ground truth boxes on the image
             for (jdx = 0; jdx < train_labels[idx].size(); ++jdx)
@@ -874,7 +851,7 @@ int main(int argc, char** argv)
             //save_png(tmp_img, image_save_name);
 
             training_results += tr;
-            dlib::sleep(50);
+            //dlib::sleep(50);
             //std::cin.ignore();
 
         }
@@ -927,8 +904,6 @@ int main(int argc, char** argv)
             DataLogStream << "Classification Time (s): " << elapsed_time.count() << std::endl;
             DataLogStream << "Results: " << std::fixed << std::setprecision(4) << tr(0, 0) << ", " << tr(0, 3) << ", " << tr(0, 4) << ", " << tr(0, 5) << std::endl;
 
-            //dnn_test_labels.push_back(dnn_labels);
-
             //overlay the dnn detections on the image
             for (jdx = 0; jdx < dnn_labels.size(); ++jdx)
             {
@@ -950,24 +925,21 @@ int main(int argc, char** argv)
             //save_png(tmp_img, image_save_name);
 
             test_results += tr;
-            dlib::sleep(50);
+            //dlib::sleep(50);
             //std::cin.ignore();
 
         }
-
 
         // output the test results
         std::cout << "------------------------------------------------------------------" << std::endl;
         std::cout << "Testing Results (detction_accuracy, correct_hits, false_positives, missing_detections):  " << std::fixed << std::setprecision(4) << test_results(0, 0) / (double)test_file.size() << ", " << test_results(0, 3) << ", " << test_results(0, 4) << ", " << test_results(0, 5) << std::endl;
         std::cout << "------------------------------------------------------------------" << std::endl;
 
-
         // save the results to the log file
         DataLogStream << "------------------------------------------------------------------" << std::endl;
         DataLogStream << "Training Results (detction_accuracy, correct_hits, false_positives, missing_detections): " << std::fixed << std::setprecision(4) << training_results(0, 0) / (double)training_file.size() << ", " << training_results(0, 3) << ", " << training_results(0, 4) << ", " << training_results(0, 5) << std::endl;
         DataLogStream << "Testing Results (detction_accuracy, correct_hits, false_positives, missing_detections):  " << std::fixed << std::setprecision(4) << test_results(0, 0) / (double)test_file.size() << ", " << test_results(0, 3) << ", " << test_results(0, 4) << ", " << test_results(0, 5) << std::endl;
         DataLogStream << "------------------------------------------------------------------" << std::endl;
-
 
         std::cout << "End of Program." << std::endl;
         DataLogStream.close();
@@ -990,4 +962,4 @@ int main(int argc, char** argv)
 
     return 0;
 
-}
+}	// end of main
