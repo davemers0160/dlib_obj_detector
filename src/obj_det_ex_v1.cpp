@@ -19,7 +19,7 @@
 #include <stdexcept>
 
 // Custom includes
-#include "yj_dnn.h"
+#include "obj_det_dnn.h"
 #include "get_platform.h"
 //#include "file_parser.h"
 #include "get_current_time.h"
@@ -39,7 +39,6 @@
 
 
 // dlib includes
-//#include "random_array_cropper.h"
 #include <dlib/dnn.h>
 #include <dlib/image_io.h>
 #include <dlib/data_io.h>
@@ -47,30 +46,34 @@
 #include <dlib/image_transforms.h>
 #include <dlib/rand.h>
 
+// dlib-contrib includes
+#include "array_image_operations.h"
+#include "random_array_cropper.h"
+
+
 // new copy and set learning rate includes
 //#include "copy_dlib_net.h"
 //#include "dlib_set_learning_rates.h"
 
-
 // -------------------------------GLOBALS--------------------------------------
 
-//extern const uint32_t array_depth;
-//extern const uint32_t secondary;
+extern const uint32_t array_depth;
 std::string platform;
 
 //this will store the standard RGB images
-std::vector<dlib::matrix<dlib::rgb_pixel>> train_images, test_images;
+//std::vector<dlib::matrix<dlib::rgb_pixel>> train_images, test_images;
+std::vector<std::array<dlib::matrix<uint8_t>, array_depth>> train_images, test_images;
+//std::array<dlib::matrix<uint8_t>, array_depth> train_image, test_image;
 
 // this will store the ground truth data for the bounding box labels
 //std::vector<dlib::mmod_rect> train_label, test_label;
 std::vector<std::vector<dlib::mmod_rect>> train_labels, test_labels;
 
 std::string version;
-std::string net_name = "yj_net_";
-std::string net_sync_name = "yj_sync_";
-std::string logfileName = "yj_net_log_";
-//std::string trainfileName = "dfd_train_results_" + version + ".txt";
-//std::string gorgon_savefile = "gorgon_dfd_";
+std::string net_name = "obj_det_net_";
+std::string net_sync_name = "obj_det_sync_";
+std::string logfileName = "obj_det_net_log_";
+//std::string gorgon_savefile = "gorgon_obj_det_";
 
 // ----------------------------------------------------------------------------
 void get_platform_control(void)
@@ -139,9 +142,10 @@ int main(int argc, char** argv)
 
     crop_info ci;
 
-    std::pair<uint32_t, uint32_t> target_size;
+    std::pair<uint32_t, uint32_t> target_size;  // min_target_size, max_target_size
     //uint32_t min_target_size = 45;  // 20 min_object_length_short_dimension
     //uint32_t max_target_size = 100;  // 70 min_object_length_long_dimension
+
     std::vector<int32_t> gpu;
     uint64_t one_step_calls = 0;
     uint64_t epoch = 0;
@@ -150,10 +154,10 @@ int main(int argc, char** argv)
     //create window to display images
     dlib::image_window win;
     dlib::rgb_pixel color;
-    dlib::matrix<dlib::rgb_pixel> tmp_img;
+    dlib::matrix<dlib::rgb_pixel> rgb_img;
 
     // set the learning rate multipliers: 0 means freeze the layers; r1 = learning rate multiplier, r2 = learning rate bias multiplier
-    double r1 = 1.0, r2 = 1.0;
+    //double r1 = 1.0, r2 = 1.0;
     
     // ----------------------------------------------------------------------------------------
    
@@ -537,7 +541,7 @@ int main(int argc, char** argv)
         // options.detector_windows.size().  So we set that here as well.
         net.subnet().layer_details().set_num_filters(options.detector_windows.size());
 
-        dlib::dnn_trainer<yj_net_type, dlib::adam> trainer(net, dlib::adam(0.0001, 0.9, 0.99),  gpu);
+        dlib::dnn_trainer<net_type, dlib::adam> trainer(net, dlib::adam(0.0001, 0.9, 0.99),  gpu);
         trainer.set_learning_rate(tp.intial_learning_rate);
         trainer.be_verbose();
         trainer.set_synchronization_file((sync_save_location + net_sync_name), std::chrono::minutes(5));
@@ -552,7 +556,7 @@ int main(int argc, char** argv)
         std::vector<dlib::matrix<dlib::rgb_pixel>> train_batch_samples, test_batch_samples;
         std::vector<std::vector<dlib::mmod_rect>> train_batch_labels, test_batch_labels;
 
-        dlib::random_cropper cropper;
+        dlib::random_array_cropper cropper;
 
         cropper.set_seed(time(NULL));
 
@@ -674,12 +678,12 @@ int main(int argc, char** argv)
                     test_label.clear();
                     load_single_set(test_data_directory, test_file[idx], test_image, test_label);
 
-                    merge_channels(test_image, tmp_img);
+                    merge_channels(test_image, rgb_img);
                     //std::cout << te_image_files[idx].first;
                     //win.clear_overlay();
-                    //win.set_image(tmp_img);
+                    //win.set_image(rgb_img);
                     v_win[idx].clear_overlay();
-                    v_win[idx].set_image(tmp_img);
+                    v_win[idx].set_image(rgb_img);
 
                     
                     //v_win[idx].clear_overlay();
@@ -710,13 +714,13 @@ int main(int argc, char** argv)
                     for (jdx = 0; jdx < test_label.size(); ++jdx)
                     {
                         v_win[idx].add_overlay(test_label[jdx].rect, dlib::rgb_pixel(0, 255, 0));
-                        draw_rectangle(tmp_img, test_label[jdx].rect, dlib::rgb_pixel(0, 255, 0), 2);
+                        draw_rectangle(rgb_img, test_label[jdx].rect, dlib::rgb_pixel(0, 255, 0), 2);
                     }
 
                     
                     //save results in image form
                     //std::string image_save_name = output_save_location + "test_save_image_" + version + num2str(idx, "_%03d.png");
-                    //save_png(tmp_img, image_save_name);
+                    //save_png(rgb_img, image_save_name);
                     std::cout << std::endl;
 
                     test_results += tr;
@@ -803,8 +807,9 @@ int main(int argc, char** argv)
         for (idx = 0; idx < train_images.size(); ++idx)
         {
 
+            merge_channels(train_images[idx], rgb_img);
             win.clear_overlay();
-            win.set_image(train_images[idx]);
+            win.set_image(rgb_img);
 
             std::vector<dlib::mmod_rect> dnn_labels;
 
@@ -817,13 +822,13 @@ int main(int argc, char** argv)
 
             std::cout << "------------------------------------------------------------------" << std::endl;
             std::cout << "Image " << std::setw(5) << std::setfill('0') << idx << ": " << tr_image_files[idx] << std::endl;
-            std::cout << "Image Size (h x w): " << train_images[idx].nr() << "x" << train_images[idx].nc() << std::endl;
+            std::cout << "Image Size (h x w): " << train_images[idx][0].nr() << "x" << train_images[idx][0].nc() << std::endl;
             std::cout << "Classification Time (s): " << elapsed_time.count() << std::endl;
             std::cout << "Results: " << std::fixed << std::setprecision(4) << tr(0, 0) << ", " << tr(0, 3) << ", " << tr(0, 4) << ", " << tr(0, 5) << std::endl;
 
             DataLogStream << "------------------------------------------------------------------" << std::endl;
             DataLogStream << "Image " << std::setw(5) << std::setfill('0') << idx << ": " << tr_image_files[idx] << std::endl;
-            DataLogStream << "Image Size (h x w): " << train_images[idx].nr() << "x" << train_images[idx].nc() << std::endl;
+            DataLogStream << "Image Size (h x w): " << train_images[idx][0].nr() << "x" << train_images[idx][0].nc() << std::endl;
             DataLogStream << "Classification Time (s): " << elapsed_time.count() << std::endl;
             DataLogStream << "Results: " << std::fixed << std::setprecision(4) << tr(0, 0) << ", " << tr(0, 3) << ", " << tr(0, 4) << ", " << tr(0, 5) << std::endl;
 
@@ -832,7 +837,7 @@ int main(int argc, char** argv)
             for (jdx = 0; jdx < dnn_labels.size(); ++jdx)
             {
                 win.add_overlay(dnn_labels[jdx].rect, dlib::rgb_pixel(255, 0, 0));
-                draw_rectangle(tmp_img, dnn_labels[jdx].rect, dlib::rgb_pixel(255, 0, 0),2);
+                draw_rectangle(rgb_img, dnn_labels[jdx].rect, dlib::rgb_pixel(255, 0, 0),2);
                 DataLogStream << "Detect Confidence Level (" << dnn_labels[jdx].label << "): " << dnn_labels[jdx].detection_confidence << std::endl;
                 std::cout << "Detect Confidence Level (" << dnn_labels[jdx].label << "): " << dnn_labels[jdx].detection_confidence << std::endl;
 				results = results + ",{" + num2str(dnn_labels[jdx].rect.left(),"%d,") + num2str(dnn_labels[jdx].rect.top(),"%d,") + num2str(dnn_labels[jdx].rect.width(),"%d,") + num2str(dnn_labels[jdx].rect.height(),"%d,") + dnn_labels[jdx].label + "},";
@@ -843,7 +848,7 @@ int main(int argc, char** argv)
             for (jdx = 0; jdx < train_labels[idx].size(); ++jdx)
             {
                 win.add_overlay(train_labels[idx][jdx].rect, dlib::rgb_pixel(0, 255, 0));
-                draw_rectangle(tmp_img, train_labels[idx][jdx].rect, dlib::rgb_pixel(0,255,0),2);
+                draw_rectangle(rgb_img, train_labels[idx][jdx].rect, dlib::rgb_pixel(0,255,0),2);
             }
 
             //save results in image form
@@ -878,10 +883,10 @@ int main(int argc, char** argv)
             //test_label.clear();
             //load_single_set(test_data_directory, test_file[idx], test_image, test_label);
 
-            //merge_channels(test_image, tmp_img);
+            merge_channels(test_images[idx], rgb_img);
             //std::cout << te_image_files[idx].first;
             win.clear_overlay();
-            win.set_image(test_images[idx]);
+            win.set_image(rgb_img);
 
             std::vector<dlib::mmod_rect> dnn_labels;
 
@@ -894,13 +899,13 @@ int main(int argc, char** argv)
 
             std::cout << "------------------------------------------------------------------" << std::endl;
             std::cout << "Image " << std::setw(5) << std::setfill('0') << idx << ": " << te_image_files[idx] << std::endl;
-            std::cout << "Image Size (h x w): " << test_images[idx].nr() << "x" << test_images[idx].nc() << std::endl;
+            std::cout << "Image Size (h x w): " << test_images[idx][0].nr() << "x" << test_images[idx][0].nc() << std::endl;
             std::cout << "Classification Time (s): " << elapsed_time.count() << std::endl;
             std::cout << "Results: " << std::fixed << std::setprecision(4) << tr(0, 0) << ", " << tr(0, 3) << ", " << tr(0, 4) << ", " << tr(0, 5) << std::endl;
 
             DataLogStream << "------------------------------------------------------------------" << std::endl;
             DataLogStream << "Image " << std::setw(5) << std::setfill('0') << idx << ": " << te_image_files[idx] << std::endl;
-            DataLogStream << "Image Size (h x w): " << test_images[idx].nr() << "x" << test_images[idx].nc() << std::endl;
+            DataLogStream << "Image Size (h x w): " << test_images[idx][0].nr() << "x" << test_images[idx][0].nc() << std::endl;
             DataLogStream << "Classification Time (s): " << elapsed_time.count() << std::endl;
             DataLogStream << "Results: " << std::fixed << std::setprecision(4) << tr(0, 0) << ", " << tr(0, 3) << ", " << tr(0, 4) << ", " << tr(0, 5) << std::endl;
 
@@ -908,7 +913,7 @@ int main(int argc, char** argv)
             for (jdx = 0; jdx < dnn_labels.size(); ++jdx)
             {
                 win.add_overlay(dnn_labels[jdx].rect, dlib::rgb_pixel(255, 0, 0));
-                draw_rectangle(tmp_img, dnn_labels[jdx].rect, dlib::rgb_pixel(255, 0, 0), 2);
+                draw_rectangle(rgb_img, dnn_labels[jdx].rect, dlib::rgb_pixel(255, 0, 0), 2);
                 DataLogStream << "Detect Confidence Level (" << dnn_labels[jdx].label << "): " << dnn_labels[jdx].detection_confidence << std::endl;
                 std::cout << "Detect Confidence Level (" << dnn_labels[jdx].label << "): " << dnn_labels[jdx].detection_confidence << std::endl;
             }
@@ -917,12 +922,12 @@ int main(int argc, char** argv)
             for (jdx = 0; jdx < test_labels[idx].size(); ++jdx)
             {
                 win.add_overlay(test_labels[idx][jdx].rect, dlib::rgb_pixel(0, 255, 0));
-                draw_rectangle(tmp_img, test_labels[idx][jdx].rect, dlib::rgb_pixel(0, 255, 0), 2);
+                draw_rectangle(rgb_img, test_labels[idx][jdx].rect, dlib::rgb_pixel(0, 255, 0), 2);
             }
 
             //save results in image form
             //std::string image_save_name = output_save_location + "test_save_image_" + version + num2str(idx, "_%03d.png");
-            //save_png(tmp_img, image_save_name);
+            //save_png(rgb_img, image_save_name);
 
             test_results += tr;
             //dlib::sleep(50);

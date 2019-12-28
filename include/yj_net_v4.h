@@ -87,14 +87,16 @@ input[4] -> downsampler -> rcon3 -> rcon3 -> rcon3 -> con6
 // layer causes the network to operate over a spatial pyramid, making the detector
 // scale invariant.  
 
-using yj_net_type = dlib::loss_mmod<con9<1,
+using net_type = dlib::loss_mmod<con9<1,
     rcon5<128, rcon5<64, rcon5<64, downsampler<64, 32, 16,
-    dlib::input_rgb_image_pyramid<dlib::pyramid_down<8>>
+    //dlib::input_rgb_image_pyramid<dlib::pyramid_down<8>>
+    dlib::input_array_image_pyramid<dlib::pyramid_down<6>, array_depth>
     >>>> >>;
 
-using ayj_net_type = dlib::loss_mmod<con9<1,
+using anet_type = dlib::loss_mmod<con9<1,
     arcon5<128, arcon5<64, arcon5<64, adownsampler<64, 32, 16,
-    dlib::input_rgb_image_pyramid<dlib::pyramid_down<8>>
+    //dlib::input_rgb_image_pyramid<dlib::pyramid_down<8>>
+    dlib::input_array_image_pyramid<dlib::pyramid_down<6>, array_depth>
     >>>> >>;
 
 // ----------------------------------------------------------------------------------------

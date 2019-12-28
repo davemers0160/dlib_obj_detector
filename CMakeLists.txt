@@ -15,36 +15,51 @@
 
 cmake_minimum_required(VERSION 2.8.12)
 
-PROJECT(YJ_Project)
+PROJECT(Obj_Det_Project)
 
 set(PLATFORM "$ENV{PLATFORM}" CACHE INTERNAL "Copied from environment variable")
 message("Platform: " ${PLATFORM})
 
 if(WIN32)
-    if(${PLATFORM} STREQUAL "BEAST")
-        include(D:/dlib-19.17/dlib/cmake)
+	if(${PLATFORM} STREQUAL "Laptop")
+		set(COMMON_ROOT "D:/Common")
+		set(DLIB_CONTRIB "D:/Projects/dlib-contrib")
+		include(D:/dlib-19.17/dlib/cmake)
+	elseif(${PLATFORM} STREQUAL "LaptopN")
+		set(COMMON_ROOT "C:/Projects/Common")
+		set(DLIB_CONTRIB "C:/Projects/dlib-contrib")
+		include(C:/dlib-19.17/dlib/cmake)	
+    elseif(${PLATFORM} STREQUAL "BEAST")
         set(COMMON_ROOT "D:/Common")
+		set(DLIB_CONTRIB "D:/Projects/dlib-contrib")
+        include(D:/dlib-19.17/dlib/cmake)
     else()
-        include(D:/dlib-19.17/dlib/cmake)
         set(COMMON_ROOT "D:/Common")
+		set(DLIB_CONTRIB "D:/Projects/dlib-contrib")
+        include(D:/dlib-19.17/dlib/cmake)
     endif()    
 else()
     if(${PLATFORM} STREQUAL "HPC")
-        include(~/dlib-19.17/dlib/cmake)
         set(COMMON_ROOT "~/Common")
+		set(DLIB_CONTRIB "~/Projects/dlib-contrib")
+        include(~/dlib-19.17/dlib/cmake)
     else()
-        include(~/dlib-19.17/dlib/cmake)
         set(COMMON_ROOT "~/Common")
+		set(DLIB_CONTRIB "~/Projects/dlib-contrib")
+        include(~/dlib-19.17/dlib/cmake)
     endif()
 endif()
 
 
-set(exe_name "yj_ex")
+set(exe_name "obj_det")
 
 
 # grab all of the *.cpp files in the src directory
-file(GLOB SOURCES "src/*.cpp" )	
-
+file(GLOB SOURCES "src/*.cpp" 
+    "${COMMON_ROOT}/src/*.cpp"
+    "${DLIB_CONTRIB}/src/*.cpp"
+	)
+	
 message(" ")
 message("--------------------------------------------------------")
 message("Source Files: ")
@@ -55,8 +70,10 @@ message("--------------------------------------------------------")
 message(" ")
 
 set(project_includes "include" 
-	"${COMMON_ROOT}/include"
+	"${COMMON_ROOT}/include" 
+	"${DLIB_CONTRIB}/include" 
 	)
+
 
 message("--------------------------------------------------------")
 message("Project Includes: ")

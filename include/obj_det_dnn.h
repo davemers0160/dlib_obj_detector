@@ -12,7 +12,7 @@
 // dlib includes
 //#include <dlib/dnn.h>
 
-// extern const uint32_t img_depth;
+extern const uint32_t array_depth;
 // extern const uint32_t secondary;
 
 // ----------------------------------------------------------------------------------------
