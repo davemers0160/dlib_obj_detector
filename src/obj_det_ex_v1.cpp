@@ -60,14 +60,16 @@
 extern const uint32_t array_depth;
 std::string platform;
 
-//this will store the standard RGB images
+//this will store the standard RGB images and groundtruth data for the bounding box labels
 //std::vector<dlib::matrix<dlib::rgb_pixel>> train_images, test_images;
 std::vector<std::array<dlib::matrix<uint8_t>, array_depth>> train_images, test_images;
 //std::array<dlib::matrix<uint8_t>, array_depth> train_image, test_image;
-
-// this will store the ground truth data for the bounding box labels
 //std::vector<dlib::mmod_rect> train_label, test_label;
 std::vector<std::vector<dlib::mmod_rect>> train_labels, test_labels;
+
+// containers to store the random crops used during each training iteration and groundtruth data for the bounding box labels
+std::vector<std::array<dlib::matrix<uint8_t>, array_depth>> train_batch_samples, test_batch_samples;
+std::vector<std::vector<dlib::mmod_rect>> train_batch_labels, test_batch_labels;
 
 std::string version;
 std::string net_name = "obj_det_net_";
@@ -551,10 +553,6 @@ int main(int argc, char** argv)
 
         // set the batch normalization stats window to something big
         dlib::set_all_bn_running_stats_window_sizes(net, 1000);
-
-		// containers to store the random crops used during each training iteration
-        std::vector<dlib::matrix<dlib::rgb_pixel>> train_batch_samples, test_batch_samples;
-        std::vector<std::vector<dlib::mmod_rect>> train_batch_labels, test_batch_labels;
 
         dlib::random_array_cropper cropper;
 

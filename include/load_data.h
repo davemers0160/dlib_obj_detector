@@ -1,5 +1,5 @@
-#ifndef LOAD_DFD_DATA_H
-#define LOAD_DFD_DATA_H
+#ifndef LOAD_DATA_H
+#define LOAD_DATA_H
 
 #include <cmath>
 #include <cstdlib>
@@ -11,17 +11,16 @@
 #include <string>
 
 // Custom Includes
-# include "file_parser.h"
+#include "file_parser.h"
 
 // dlib includes
 #include <dlib/dnn.h>
 #include <dlib/image_io.h>
-//#include <dlib/data_io.h>
-//#include <dlib/image_transforms.h>
 
+// dlib-contrib includes
+#include "rgb2gray.h"
 
-// extern const uint32_t array_depth;
-// extern const uint32_t secondary;
+extern const uint32_t array_depth;
 
 // --------------------------------------------------------
 
@@ -39,7 +38,10 @@ void dataset_downsample(
 
     // 1. loop through the array layers
     //    - resize each layer according to pyr
-    pyr(img);
+    for (idx = 0; idx < array_depth; ++idx)
+    {
+        pyr(img[idx]);
+    }
 
 
     // 2. resize the label and reposition so that it bounds the right pixels
@@ -131,7 +133,6 @@ void read_group_labels(
             bottom = *y.second;
         }
 
-
         dlib::rectangle r(left, top, right, bottom);
         dlib::mmod_rect m_r(r, 0.0, label_name);
 
@@ -141,48 +142,94 @@ void read_group_labels(
 
 }   // end of read_group_labels
 
+// --------------------------------------------------------
+
+template<typename img_type>
+void load_single_set(
+    const std::string data_directory,
+    const std::vector<std::string> data_file,
+    img_type& img,
+    std::vector<dlib::mmod_rect>& labels
+)
+{
+    long r, c;
+    dlib::matrix<dlib::rgb_pixel> tmp_img;
+
+    std::string image_file = data_directory + data_file[0];
+              
+	// load in the RGB image with 3 or more channels - ignoring everything after RGB		
+    dlib::load_image(tmp_img, image_file);
+
+    switch (array_depth)
+    {
+        case 1:
+            dlib::rgb2gray(tmp_img, img[0]);
+            break;
+
+        case 3:
+            for (uint32_t d = 0; d < array_depth; ++d)
+            {
+                img[d].set_size(tmp_img.nr(), tmp_img.nc());
+            }
+            break;
+
+            for (r = 0; r < tmp_img.nr(); ++r)
+            {
+                for (c = 0; c < tmp_img.nc(); ++c)
+                {
+                    dlib::rgb_pixel p;
+                    dlib::assign_pixel(p, tmp_img(r, c));
+                    dlib::assign_pixel(img[0](r, c), p.red);
+                    dlib::assign_pixel(img[1](r, c), p.green);
+                    dlib::assign_pixel(img[2](r, c), p.blue);
+                }
+            }
+
+    }   // end of switch case
+
+    // load in the label data
+    read_group_labels(data_file, labels);
+
+}   // end of load_single_set
 
 // --------------------------------------------------------
 
 template<typename img_type>
 void load_data(
-    const std::vector<std::vector<std::string>> training_file, 
+    const std::vector<std::vector<std::string>> data_file,
     const std::string data_directory,
     std::vector<img_type> &img,
 	std::vector<std::vector<dlib::mmod_rect>> &labels,
     std::vector<std::string> &image_files
 )
 {
-
     uint32_t idx;
 
     std::string image_file, depth_file;
+    img_type t;
 
     // clear out the container for the focus and defocus filenames
 	img.clear();
 	labels.clear();
 
-    for (idx = 0; idx < training_file.size(); idx++)
+    for (idx = 0; idx < data_file.size(); idx++)
     {
+        img_type tmp_img;
+        std::vector<dlib::mmod_rect> tmp_label;
 
-        // get the image file
-		image_file = data_directory + training_file[idx][0];
+        // get the image filenames
+		image_file = data_directory + data_file[idx][0];
         image_files.push_back(image_file);
-                
-		// load in the RGB image with 3 or more channels - ignoring everything after RGB
-		dlib::matrix<dlib::rgb_pixel> tmp_img;
-        dlib::load_image(tmp_img, image_file);
-		img.push_back(tmp_img);
 
-		// load in the label info
-		std::vector<dlib::mmod_rect> tmp_label;
-        read_group_labels(training_file[idx], tmp_label);
-        
+        // load the image and labels
+        load_single_set(data_directory, data_file[idx], tmp_img, tmp_label);
+
+        // push back the image and labels 
+		img.push_back(tmp_img);
 		labels.push_back(tmp_label);
 
     }   // end of the read in data loop
 
 }   // end of loadData
 
-
-#endif  // LOAD_DFD_DATA_H
+#endif  // LOAD_DATA_H
