@@ -80,6 +80,7 @@ void read_labels(
 // --------------------------------------------------------
 
 void read_group_labels(
+    const uint32_t start,
     const std::vector<std::string> params,
     std::vector<dlib::mmod_rect> &labels
 )
@@ -88,7 +89,7 @@ void read_group_labels(
     uint64_t left, right, top, bottom;
 
     // load in the label info
-    for (idx = 1; idx < params.size(); ++idx)
+    for (idx = start; idx < params.size(); ++idx)
     {
         std::vector<std::string> label_info;
 
@@ -152,43 +153,97 @@ void load_single_set(
     std::vector<dlib::mmod_rect>& labels
 )
 {
+    uint32_t start;
     long r, c;
-    dlib::matrix<dlib::rgb_pixel> tmp_img;
+    dlib::matrix<dlib::rgb_pixel> t1, t2;
+    dlib::rgb_pixel p;
 
     std::string image_file = data_directory + data_file[0];
               
 	// load in the RGB image with 3 or more channels - ignoring everything after RGB		
-    dlib::load_image(tmp_img, image_file);
+    dlib::load_image(t1, image_file);
+
+    for (uint32_t d = 0; d < array_depth; ++d)
+    {
+        img[d].set_size(t1.nr(), t1.nc());
+    }
 
     switch (array_depth)
     {
+        // case for converting an RGB image to grayscale image
         case 1:
-            dlib::rgb2gray(tmp_img, img[0]);
+            dlib::rgb2gray(t1, img[0]);
+            start = 1;
             break;
 
+        // case for using two 3-channel images and making them grayscale inputs
+        case 2:
+            dlib::rgb2gray(t1, img[0]);
+            image_file = data_directory + data_file[1];
+            dlib::load_image(t2, image_file);
+            dlib::rgb2gray(t2, img[1]);
+            start = 2;
+            break;
+
+        // case for using an single 3-channel image
         case 3:
-            for (uint32_t d = 0; d < array_depth; ++d)
+            for (r = 0; r < t1.nr(); ++r)
             {
-                img[d].set_size(tmp_img.nr(), tmp_img.nc());
-            }
-            break;
-
-            for (r = 0; r < tmp_img.nr(); ++r)
-            {
-                for (c = 0; c < tmp_img.nc(); ++c)
+                for (c = 0; c < t1.nc(); ++c)
                 {
-                    dlib::rgb_pixel p;
-                    dlib::assign_pixel(p, tmp_img(r, c));
+                    dlib::assign_pixel(p, t1(r, c));
                     dlib::assign_pixel(img[0](r, c), p.red);
                     dlib::assign_pixel(img[1](r, c), p.green);
                     dlib::assign_pixel(img[2](r, c), p.blue);
                 }
             }
+            start = 1;
+            break;
+
+        // case for using an RBG image and a 4th channel
+        case 4:
+            for (r = 0; r < t1.nr(); ++r)
+            {
+                for (c = 0; c < t1.nc(); ++c)
+                {
+                    dlib::assign_pixel(p, t1(r, c));
+                    dlib::assign_pixel(img[0](r, c), p.red);
+                    dlib::assign_pixel(img[1](r, c), p.green);
+                    dlib::assign_pixel(img[2](r, c), p.blue);
+                }
+            }
+            image_file = data_directory + data_file[1];
+            dlib::load_image(t2, image_file);
+            dlib::rgb2gray(t2, img[3]);
+            start = 2;
+            break;
+
+        // case for using two 3-channel images
+        case 6:
+            image_file = data_directory + data_file[1];
+            dlib::load_image(t2, image_file);
+
+            for (r = 0; r < t1.nr(); ++r)
+            {
+                for (c = 0; c < t1.nc(); ++c)
+                {
+                    dlib::assign_pixel(p, t1(r, c));
+                    dlib::assign_pixel(img[0](r, c), p.red);
+                    dlib::assign_pixel(img[1](r, c), p.green);
+                    dlib::assign_pixel(img[2](r, c), p.blue);
+                    dlib::assign_pixel(p, t2(r, c));
+                    dlib::assign_pixel(img[3](r, c), p.red);
+                    dlib::assign_pixel(img[4](r, c), p.green);
+                    dlib::assign_pixel(img[5](r, c), p.blue);
+                }
+            }
+            start = 2;
+            break;
 
     }   // end of switch case
 
     // load in the label data
-    read_group_labels(data_file, labels);
+    read_group_labels(start, data_file, labels);
 
 }   // end of load_single_set
 
