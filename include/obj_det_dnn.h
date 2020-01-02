@@ -45,7 +45,18 @@ typedef struct crop_info {
 
 
 // ----------------------------------------------------------------------------------------
-void parse_input_file(std::string parse_filename, std::string &version, std::vector<int32_t> &gpu, std::vector<double> &stop_criteria, training_params &tp, std::string &training_file, std::string &test_file, crop_info &ci, std::pair<uint32_t, uint32_t> &target_size, std::vector<uint32_t> &filter_num)
+void parse_input_file(std::string parse_filename, 
+    std::string &version, 
+    std::vector<int32_t> &gpu, 
+    std::vector<double> &stop_criteria, 
+    training_params &tp, 
+    std::string &training_file, 
+    std::string &test_file, 
+    crop_info &ci, 
+    std::pair<uint32_t, uint32_t> &target_size, 
+    std::vector<uint32_t> &filter_num,
+    std::string &save_directory
+)
 {
 
 
@@ -180,6 +191,10 @@ void parse_input_file(std::string parse_filename, std::string &version, std::vec
 
                     std::cout << "Error getting filter numbers.  No values passed on." << std::endl;
                 }
+                break;
+
+            case 9:
+                save_directory = params[idx][0];
                 break;
 
             default:

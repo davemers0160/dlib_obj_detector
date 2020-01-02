@@ -1,0 +1,30 @@
+
+# Version
+yj_v1_
+
+# GPU
+0
+
+# stopping criteria: max hours, max training steps
+0.05, 100000
+
+# training parameters
+0.0001, 0.0000001, 0.1, 3000
+
+# training data file
+C:/Projects/data/train_quarter_input_sm1.txt
+
+# test data file
+C:/Projects/data/train_quarter_input_sm1.txt
+
+# training crop info
+2, 100, 100, 15.0
+
+# the min/max target sizes
+35, 70
+
+# number conv filters for each layer
+1, 10, 10, 6, 5, 4, 3
+
+# root location where the results will be saved
+../results/

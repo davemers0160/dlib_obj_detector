@@ -115,6 +115,7 @@ int main(int argc, char** argv)
     // data IO variables
     const std::string os_file_sep = "/";
     std::string program_root;
+    std::string save_directory;
     std::string sync_save_location;
     std::string image_save_location;
     std::string results_save_location;
@@ -145,8 +146,6 @@ int main(int argc, char** argv)
     crop_info ci;
 
     std::pair<uint32_t, uint32_t> target_size;  // min_target_size, max_target_size
-    //uint32_t min_target_size = 45;  // 20 min_object_length_short_dimension
-    //uint32_t max_target_size = 100;  // 70 min_object_length_long_dimension
 
     std::vector<int32_t> gpu;
     uint64_t one_step_calls = 0;
@@ -173,7 +172,7 @@ int main(int argc, char** argv)
     std::string parse_filename = argv[1];
 
     // parse through the supplied csv file
-    parse_input_file(parse_filename, version, gpu, stop_criteria, tp, train_inputfile, test_inputfile, ci, target_size, filter_num);
+    parse_input_file(parse_filename, version, gpu, stop_criteria, tp, train_inputfile, test_inputfile, ci, target_size, filter_num, save_directory);
 
     // check the platform
     get_platform_control();
@@ -187,10 +186,10 @@ int main(int argc, char** argv)
 
     // setup save variable locations
 #if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
-    program_root = get_path(get_path(get_path(std::string(argv[0]), "\\"), "\\"), "\\") + os_file_sep;
-    sync_save_location = program_root + "nets/";
-    results_save_location = program_root + "results/";
-    image_save_location = program_root + "result_images/";
+    //program_root = get_path(get_path(get_path(std::string(argv[0]), "\\"), "\\"), "\\") + os_file_sep;
+    sync_save_location = save_directory + "nets/";
+    results_save_location = save_directory + "results/";
+    image_save_location = save_directory + "result_images/";
 
 #else
     if (HPC == 1)
@@ -221,9 +220,9 @@ int main(int argc, char** argv)
         }
     }
 
-    sync_save_location = program_root + "nets/";
-    results_save_location = program_root + "results/";
-    image_save_location = program_root + "result_images/";
+    sync_save_location = save_directory + "nets/";
+    results_save_location = save_directory + "results/";
+    image_save_location = save_directory + "result_images/";
 
 #endif
 
@@ -233,7 +232,8 @@ int main(int argc, char** argv)
     for (idx = 0; idx < gpu.size(); ++idx)
         std::cout << gpu[idx] << " ";
     std::cout << "}" << std::endl;
-    std::cout << "program_root:          " << program_root << std::endl;
+    //std::cout << "program_root:          " << program_root << std::endl;
+    std::cout << "save_directory:        " << save_directory << std::endl;
     std::cout << "sync_save_location:    " << sync_save_location << std::endl;
     std::cout << "results_save_location: " << results_save_location << std::endl;
     std::cout << "image_save_location:   " << image_save_location << std::endl;
@@ -297,19 +297,6 @@ int main(int argc, char** argv)
 
         DataLogStream << train_inputfile << std::endl;
         DataLogStream << "Training image sets to parse: " << training_file.size() << std::endl;
-
-
-        // read in the training labels - needs to be done separately now since the images are not loaded prior to training
-        //dnn_train_labels.clear();
-        //for (idx = 0; idx < training_file.size(); ++idx)
-        //{
-        //    train_label.clear();
-        //    read_group_labels(training_file[idx], train_label);
-
-        //    dnn_train_labels.push_back(train_label);
-        //    tr_image_files.push_back(std::make_pair(training_file[idx][0], training_file[idx][1]));
-        //}
-
         
         std::cout << "Loading training images... ";
 
@@ -378,7 +365,7 @@ int main(int argc, char** argv)
         // parse through the supplied test csv file
         // parseCSVFile(test_inputfile, test_file);
         parse_group_csv_file(test_inputfile, '{', '}', test_file);
-        if (test_inputfile.size() == 0)
+        if (test_file.size() == 0)
         {
             throw std::exception("Test file is empty");
         }
@@ -410,15 +397,6 @@ int main(int argc, char** argv)
         DataLogStream << "------------------------------------------------------------------" << std::endl;
         DataLogStream << test_inputfile << std::endl;
         DataLogStream << "Test image sets to parse: " << test_file.size() << std::endl;
-
-        //dnn_test_labels.clear();
-        //for (idx = 0; idx < test_file.size(); ++idx)
-        //{
-        //    test_label.clear();
-        //    read_group_labels(test_file[idx], test_label);
-        //    dnn_test_labels.push_back(test_label);
-        //    te_image_files.push_back(std::make_pair(test_file[idx][0], test_file[idx][1]));
-        //}
        
         std::cout << "Loading test images... ";
 
@@ -635,9 +613,10 @@ int main(int argc, char** argv)
 /*                
                 for (idx = 0; idx < train_batch_samples.size(); ++idx)
                 {
-                    //merge_channels(mini_batch_samples[idx], tmp_img);
+
+                    merge_channels(train_batch_samples[idx], rgb_img);
                     win.clear_overlay();
-                    win.set_image(train_batch_samples[idx]);
+                    win.set_image(rgb_img);
 
                     for (jdx = 0; jdx < train_batch_labels[idx].size(); ++jdx)
                     {
