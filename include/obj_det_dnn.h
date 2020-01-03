@@ -107,6 +107,7 @@ void parse_input_file(std::string parse_filename,
                 }
                 break;
 
+            // get the training parameters
             case 3:
                 try {
                     tp = training_params(stod(params[idx][0]), stod(params[idx][1]), stod(params[idx][2]), stol(params[idx][3]));
@@ -117,6 +118,7 @@ void parse_input_file(std::string parse_filename,
                     tp = training_params(0.001, 0.000001, 0.1, 2500);
                 }
                 break;
+
             // get the file that contains the training data
             case 4:
                 training_file = params[idx][0];
@@ -205,4 +207,4 @@ void parse_input_file(std::string parse_filename,
 
 }   // end of parse_dnn_data_file
 
-#endif  // DFD_DNN_H_
+#endif  // OBJ_DET_DNN_H_
