@@ -24,7 +24,7 @@
 //#include "file_parser.h"
 #include "get_current_time.h"
 
-#include "gorgon_capture.h"
+//#include "gorgon_capture.h"
 
 #include "num2string.h"
 //#include "array_image_operations.h"
@@ -435,8 +435,6 @@ int main(int argc, char** argv)
         //DataLogStream << "Number of Ignored Test Objects: " << num_ignored_test_images << std::endl << std::endl;
         //DataLogStream << "------------------------------------------------------------------" << std::endl<<std::endl;
 
-
-
         // ------------------------------------------------------------------------------------
 
         // for debugging to view the images
@@ -501,21 +499,23 @@ int main(int argc, char** argv)
 
 
         // Now we are ready to create our network and trainer.
-#if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
-        net_type net;
+//#if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
+        //net_type net;
 
         // load in the convolutional filter numbers from the input file
-        config_net(net, options, filter_num);
-#else
+        //config_net(net, options, filter_num);
+        net_type net = config_net<net_type>(options, filter_num);
+
+//#else
         // check for the gcc version
         //#if defined(__GNUC__) && (__GNUC__ > 5)
         //    net_type net(options);
             //config_net(net, options, filter_num);
         //#else
-            net_type net;
-            config_net(net, options, filter_num);
+        //    net_type net;
+        //    config_net(net, options, filter_num);
         //#endif
-#endif
+//#endif
 
         // The MMOD loss requires that the number of filters in the final network layer equal
         // options.detector_windows.size().  So we set that here as well.
@@ -661,13 +661,11 @@ int main(int argc, char** argv)
                     //win.set_image(rgb_img);
                     v_win[idx].clear_overlay();
                     v_win[idx].set_image(rgb_img);
-
-                    
+                 
                     //v_win[idx].clear_overlay();
                     //v_win[idx].set_image(tmp_img);
 
-                    std::vector<dlib::mmod_rect> dnn_labels;
-            
+                    std::vector<dlib::mmod_rect> dnn_labels;           
 
                     // get the rough classification time per image
                     start_time = chrono::system_clock::now();
@@ -693,7 +691,6 @@ int main(int argc, char** argv)
                         v_win[idx].add_overlay(test_label[jdx].rect, dlib::rgb_pixel(0, 255, 0));
                         draw_rectangle(rgb_img, test_label[jdx].rect, dlib::rgb_pixel(0, 255, 0), 2);
                     }
-
                     
                     //save results in image form
                     //std::string image_save_name = output_save_location + "test_save_image_" + version + num2str(idx, "_%03d.png");
@@ -775,7 +772,6 @@ int main(int argc, char** argv)
         // this should be displayed and then saved to the log file
         // - This can also include displaying the input image along with the ground truth bounding box, name and dnn results
         
-
         //---------------------------------------------------------------------------------------
         std::cout << "Analyzing Training Results..." << std::endl;
 
@@ -840,11 +836,9 @@ int main(int argc, char** argv)
 
         DataLogStream << "------------------------------------------------------------------" << std::endl << std::endl;
 
-
         std::cout << "------------------------------------------------------------------" << std::endl;
         std::cout << "Training Results (detction_accuracy, correct_hits, false_positives, missing_detections): " << std::fixed << std::setprecision(4) << training_results(0, 0) / (double)training_file.size() << ", " << training_results(0, 3) << ", " << training_results(0, 4) << ", " << training_results(0, 5) << std::endl;
         std::cout << "------------------------------------------------------------------" << std::endl << std::endl;
-
 
         // In this section we want to evaluate the performance of the network against the test data
         // this should be displayed and then saved to the log file

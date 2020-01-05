@@ -90,13 +90,13 @@ input[4] -> downsampler -> rcon3 -> rcon3 -> rcon3 -> con6
 using net_type = dlib::loss_mmod<con9<1,
     rcon5<128, rcon5<64, rcon5<64, downsampler<64, 32, 16,
     //dlib::input_rgb_image_pyramid<dlib::pyramid_down<8>>
-    dlib::input_array_image_pyramid<dlib::pyramid_down<6>, array_depth>
+    dlib::tag10<dlib::input_array_image_pyramid<dlib::pyramid_down<6>, array_depth>>
     >>>> >>;
 
 using anet_type = dlib::loss_mmod<con9<1,
     arcon5<128, arcon5<64, arcon5<64, adownsampler<64, 32, 16,
     //dlib::input_rgb_image_pyramid<dlib::pyramid_down<8>>
-    dlib::input_array_image_pyramid<dlib::pyramid_down<6>, array_depth>
+    dlib::tag10<dlib::input_array_image_pyramid<dlib::pyramid_down<6>, array_depth>>
     >>>> >>;
 
 // ----------------------------------------------------------------------------------------
@@ -104,19 +104,18 @@ using anet_type = dlib::loss_mmod<con9<1,
 // ----------------------------------------------------------------------------------------
 
 template <typename net_type>
-void config_net(net_type &net, dlib::mmod_options options, std::vector<uint32_t> params)
+//void config_net(net_type& net, dlib::mmod_options options, std::vector<uint32_t> params)
+net_type config_net(dlib::mmod_options options, std::vector<uint32_t>& fn)
 {
+    net_type net(options, dlib::num_con_outputs(1),
+        dlib::num_con_outputs(fn[1]),
+        dlib::num_con_outputs(fn[2]),
+        dlib::num_con_outputs(fn[3]),
+        dlib::num_con_outputs(fn[4]),
+        dlib::num_con_outputs(fn[5]),
+        dlib::num_con_outputs(fn[6]));
 
-    net = net_type(options, dlib::num_con_outputs(params[0]),
-        dlib::num_con_outputs(params[1]),
-        dlib::num_con_outputs(params[2]),
-        dlib::num_con_outputs(params[3]),
-        dlib::num_con_outputs(params[4]),
-        dlib::num_con_outputs(params[5]),
-        dlib::num_con_outputs(params[6]));
-
-    //net = net_type(options);
-  
+    return net;
 
 }   // end of config_net
 
