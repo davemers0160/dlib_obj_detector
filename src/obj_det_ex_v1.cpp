@@ -266,7 +266,7 @@ int main(int argc, char** argv)
         parse_group_csv_file(train_inputfile, '{', '}', training_file);
         if (training_file.size() == 0)
         {
-            throw std::exception("Training file is empty");
+            throw std::runtime_error("Training file is empty");
         }
 
         // the first line in this file is now the data directory
@@ -367,7 +367,7 @@ int main(int argc, char** argv)
         parse_group_csv_file(test_inputfile, '{', '}', test_file);
         if (test_file.size() == 0)
         {
-            throw std::exception("Test file is empty");
+            throw std::runtime_error("Test file is empty");
         }
 
         // the data directory should be the first entry in the input file
@@ -508,13 +508,13 @@ int main(int argc, char** argv)
         config_net(net, options, filter_num);
 #else
         // check for the gcc version
-        #if defined(__GNUC__) && (__GNUC__ > 5)
-            net_type net(options);
+        //#if defined(__GNUC__) && (__GNUC__ > 5)
+        //    net_type net(options);
             //config_net(net, options, filter_num);
-        #else
+        //#else
             net_type net;
             config_net(net, options, filter_num);
-        #endif
+        //#endif
 #endif
 
         // The MMOD loss requires that the number of filters in the final network layer equal

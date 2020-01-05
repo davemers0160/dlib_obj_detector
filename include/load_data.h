@@ -34,7 +34,7 @@ void dataset_downsample(
 {
     uint64_t idx = 0;
 
-    img_data_type tmp;      // this will store the intermediate results
+    //img_data_type tmp;      // this will store the intermediate results
 
     // 1. loop through the array layers
     //    - resize each layer according to pyr
