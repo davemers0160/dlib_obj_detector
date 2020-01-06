@@ -74,6 +74,13 @@ set(project_includes "include"
 	"${DLIB_CONTRIB}/include" 
 	)
 
+# find OpenCV
+find_package(OpenCV REQUIRED)
+if (OpenCV_FOUND)
+	set(project_includes ${project_includes} ${OpenCV_INCLUDE_DIRS})
+else()
+	message("OpenCV not found, so we won't build the project.")
+endif()
 
 message("--------------------------------------------------------")
 message("Project Includes: ")
@@ -85,7 +92,7 @@ message(" ")
 
 include_directories(${project_includes})
 add_executable(${exe_name} ${SOURCES})
-target_link_libraries(${exe_name} dlib::dlib)
+target_link_libraries(${exe_name} dlib::dlib ${OpenCV_LIBS})
 
 if(WIN32)
     message("MSVC Version: " ${MSVC_VERSION})
