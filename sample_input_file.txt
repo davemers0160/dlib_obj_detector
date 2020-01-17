@@ -6,19 +6,20 @@ yj_v1_
 0
 
 # stopping criteria: max hours, max training steps
-0.05, 100000
+0.03, 100000
 
 # training parameters
 0.0001, 0.0000001, 0.1, 3000
 
 # training data file
-C:/Projects/data/train_quarter_input_sm1.txt
+#D:/Projects/object_detection_data/test_plane/plane_train_quarter_input.txt, 0
+D:/Projects/object_detection_data/open_images/test-box-annotations-bbox.csv, 1
 
 # test data file
-C:/Projects/data/train_quarter_input_sm1.txt
+D:/Projects/object_detection_data/test_plane/plane_train_quarter_input.txt, 0
 
 # training crop info
-2, 100, 100, 15.0
+10, 100, 100, 15.0
 
 # the min/max target sizes
 35, 70

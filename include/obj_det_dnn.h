@@ -50,8 +50,10 @@ void parse_input_file(std::string parse_filename,
     std::vector<int32_t> &gpu, 
     std::vector<double> &stop_criteria, 
     training_params &tp, 
-    std::string &training_file, 
-    std::string &test_file, 
+    //std::string &training_file, 
+    //std::string &test_file, 
+    std::pair<std::string, uint8_t> &train_input,
+    std::pair<std::string, uint8_t> &test_input,
     crop_info &ci, 
     std::pair<uint32_t, uint32_t> &target_size, 
     std::vector<uint32_t> &filter_num,
@@ -121,12 +123,22 @@ void parse_input_file(std::string parse_filename,
 
             // get the file that contains the training data
             case 4:
-                training_file = params[idx][0];
+                try {
+                    train_input = std::make_pair(params[idx][0], std::stoi(params[idx][1]));
+                }
+                catch (std::exception & e) {
+                    std::cout << e.what() << std::endl;
+                }
                 break;
 
             // get the file that contains the test data
             case 5:
-                test_file = params[idx][0];
+                try {
+                    test_input = std::make_pair(params[idx][0], std::stoi(params[idx][1]));
+                }
+                catch (std::exception & e) {
+                    std::cout << e.what() << std::endl;
+                }
                 break;
 
             // get the number of crops used for training

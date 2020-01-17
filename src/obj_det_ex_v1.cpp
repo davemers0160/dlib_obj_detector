@@ -30,6 +30,7 @@
 // Net Version
 #include "yj_net_v4.h"
 #include "load_data.h"
+#include "load_oid_data.h"
 #include "eval_net_performance.h"
 //#include "enhanced_array_cropper.h"
 //#include "random_channel_swap.h"
@@ -118,6 +119,7 @@ int main(int argc, char** argv)
     std::string results_save_location;
     std::string train_inputfile;
     std::string test_inputfile;
+    std::pair<std::string, uint8_t> train_input, test_input;
     std::string train_data_directory, test_data_directory;
     std::vector<std::vector<std::string>> training_file;
     std::vector<std::vector<std::string>> test_file;
@@ -172,7 +174,7 @@ int main(int argc, char** argv)
     std::string parse_filename = argv[1];
 
     // parse through the supplied csv file
-    parse_input_file(parse_filename, version, gpu, stop_criteria, tp, train_inputfile, test_inputfile, ci, target_size, filter_num, save_directory);
+    parse_input_file(parse_filename, version, gpu, stop_criteria, tp, train_input, test_input, ci, target_size, filter_num, save_directory);
 
     // check the platform
     get_platform_control();
@@ -262,8 +264,17 @@ int main(int argc, char** argv)
 // Read in the training and testing images
 //-----------------------------------------------------------------------------
 
-        // parse through the supplied training csv file
-        parse_group_csv_file(train_inputfile, '{', '}', training_file);
+        // parse through the supplied training input file
+        switch(train_input.second)
+        {
+        case 0:
+            parse_group_csv_file(train_input.first, '{', '}', training_file);
+            break;
+        case 1:
+            parse_csv_file(train_input.first, training_file);
+            break;
+        }
+
         if (training_file.size() == 0)
         {
             throw std::runtime_error("Training file is empty");
@@ -292,17 +303,25 @@ int main(int argc, char** argv)
         std::cout << "------------------------------------------------------------------" << std::endl;
         std::cout << "data_directory:        " << train_data_directory << std::endl;
 
-        std::cout << train_inputfile << std::endl;
+        std::cout << train_input.first << std::endl;
         std::cout << "Training image sets to parse: " << training_file.size() << std::endl;
 
-        DataLogStream << train_inputfile << std::endl;
+        DataLogStream << train_input.first << std::endl;
         DataLogStream << "Training image sets to parse: " << training_file.size() << std::endl;
         
         std::cout << "Loading training images... ";
 
         // load in the images and labels
         start_time = chrono::system_clock::now();
-        load_data(training_file, train_data_directory, train_images, train_labels, tr_image_files);
+        switch (train_input.second)
+        {
+        case 0:
+            load_data(training_file, train_data_directory, train_images, train_labels, tr_image_files);
+            break;
+        case 1:
+            load_oid_data(training_file, train_data_directory, train_images, train_labels, tr_image_files);
+            break;
+        }
         stop_time = chrono::system_clock::now();
         elapsed_time = chrono::duration_cast<d_sec>(stop_time - start_time);
 
@@ -338,9 +357,6 @@ int main(int argc, char** argv)
         //DataLogStream << "Number of Ignored Train Objects: " << num_ignored_train_images << std::endl<<std::endl;
 
 
-
-        // ------------------------------------------------------------------------------------
-
         // for debugging to view the images
         //for (idx = 0; idx < training_file.size(); ++idx)
         //{   
@@ -362,9 +378,18 @@ int main(int argc, char** argv)
 
 
         //-------------------------------------------------------------------------------------
-        // parse through the supplied test csv file
-        // parseCSVFile(test_inputfile, test_file);
-        parse_group_csv_file(test_inputfile, '{', '}', test_file);
+        // parse through the supplied test input file
+        switch (test_input.second)
+        {
+        case 0:
+            parse_group_csv_file(test_input.first, '{', '}', test_file);
+            break;
+        case 1:
+            parse_csv_file(test_input.first, test_file);
+            break;
+        }
+
+        //parse_group_csv_file(test_inputfile, '{', '}', test_file);
         if (test_file.size() == 0)
         {
             throw std::runtime_error("Test file is empty");
@@ -391,18 +416,27 @@ int main(int argc, char** argv)
         test_file.erase(test_file.begin());
         std::cout << std::endl << "------------------------------------------------------------------" << std::endl;
         std::cout << "data_directory:        " << test_data_directory << std::endl;
-        std::cout << test_inputfile << std::endl;
+        std::cout << test_input.first << std::endl;
         std::cout << "Test image sets to parse: " << test_file.size() << std::endl;
 
         DataLogStream << "------------------------------------------------------------------" << std::endl;
-        DataLogStream << test_inputfile << std::endl;
+        DataLogStream << test_input.first << std::endl;
         DataLogStream << "Test image sets to parse: " << test_file.size() << std::endl;
        
         std::cout << "Loading test images... ";
 
         // load in the images and labels
         start_time = chrono::system_clock::now();
-        load_data(test_file, test_data_directory, test_images, test_labels, te_image_files);
+        switch (test_input.second)
+        {
+        case 0:
+            load_data(test_file, test_data_directory, test_images, test_labels, te_image_files);
+            break;
+        case 1:
+            load_oid_data(test_file, test_data_directory, test_images, test_labels, te_image_files);
+            break;
+        }
+        //load_data(test_file, test_data_directory, test_images, test_labels, te_image_files);
         stop_time = chrono::system_clock::now();
         elapsed_time = chrono::duration_cast<d_sec>(stop_time - start_time);
 
@@ -514,6 +548,26 @@ int main(int argc, char** argv)
         DataLogStream << "overlap NMS IOU thresh:             " << options.overlaps_nms.get_iou_thresh() << std::endl;
         DataLogStream << "overlap NMS percent covered thresh: " << options.overlaps_nms.get_percent_covered_thresh() << std::endl;
         DataLogStream << std::endl << "------------------------------------------------------------------"  << std::endl;
+
+
+        // ------------------------------------------------------------------------------------
+        /*
+        for (idx = 0; idx < train_images.size(); ++idx)
+        {
+            merge_channels(train_images[idx], rgb_img);
+            win.clear_overlay();
+
+            for (jdx = 0; jdx < train_labels[idx].size(); ++jdx)
+            {
+                auto& class_index = std::find(class_names.begin(), class_names.end(), train_labels[idx][jdx].label);
+                overlay_bounding_box(rgb_img, train_labels[idx][jdx], class_color[std::distance(class_names.begin(), class_index)]);
+            }
+            win.set_image(rgb_img);
+            //dlib::sleep(800);
+            std::cin.ignore();
+        }
+        */
+        // ------------------------------------------------------------------------------------
 
 
         // Now we are ready to create our network and trainer.
@@ -799,7 +853,7 @@ int main(int argc, char** argv)
 
             merge_channels(train_images[idx], rgb_img);
             win.clear_overlay();
-            win.set_image(rgb_img);
+            //win.set_image(rgb_img);
 
             std::vector<dlib::mmod_rect> dnn_labels;
             std::vector<label_stats> ls(num_classes, label_stats(0, 0));
@@ -852,6 +906,18 @@ int main(int argc, char** argv)
             //overlay the dnn detections on the image
             for (jdx = 0; jdx < dnn_labels.size(); ++jdx)
             {
+                auto& class_index = std::find(class_names.begin(), class_names.end(), dnn_labels[jdx].label);
+                overlay_bounding_box(rgb_img, dnn_labels[jdx], class_color[std::distance(class_names.begin(), class_index)]);
+
+                DataLogStream << "Detect Confidence Level (" << dnn_labels[jdx].label << "): " << dnn_labels[jdx].detection_confidence << std::endl;
+                std::cout << "Detect Confidence Level (" << dnn_labels[jdx].label << "): " << dnn_labels[jdx].detection_confidence << std::endl;
+            }
+            win.set_image(rgb_img);
+
+            /*
+            //overlay the dnn detections on the image
+            for (jdx = 0; jdx < dnn_labels.size(); ++jdx)
+            {
                 win.add_overlay(dnn_labels[jdx].rect, dlib::rgb_pixel(255, 0, 0));
                 draw_rectangle(rgb_img, dnn_labels[jdx].rect, dlib::rgb_pixel(255, 0, 0),2);
                 DataLogStream << "Detect Confidence Level (" << dnn_labels[jdx].label << "): " << dnn_labels[jdx].detection_confidence << std::endl;
@@ -864,7 +930,7 @@ int main(int argc, char** argv)
                 win.add_overlay(train_labels[idx][jdx].rect, dlib::rgb_pixel(0, 255, 0));
                 draw_rectangle(rgb_img, train_labels[idx][jdx].rect, dlib::rgb_pixel(0,255,0),2);
             } 
-
+            */
             //save results in image form
             //std::string image_save_name = output_save_location + "train_save_image_" + version + num2str(idx, "_%03d.png");
             //save_png(tmp_img, image_save_name);
@@ -892,12 +958,8 @@ int main(int argc, char** argv)
 
         for (idx = 0; idx < test_images.size(); ++idx)
         {
-            //test_label.clear();
-            //load_single_set(test_data_directory, test_file[idx], test_image, test_label);
-
             merge_channels(test_images[idx], rgb_img);
             win.clear_overlay();
-            //win.set_image(rgb_img);
 
             std::vector<dlib::mmod_rect> dnn_labels;
             std::vector<label_stats> ls(num_classes, label_stats(0, 0));
