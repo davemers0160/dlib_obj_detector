@@ -28,7 +28,7 @@
 //#include "gorgon_capture.h"
 
 // Net Version
-#include "yj_net_v4.h"
+#include "yj_net_v9.h"
 #include "load_data.h"
 #include "load_oid_data.h"
 #include "eval_net_performance.h"
@@ -277,6 +277,7 @@ int main(int argc, char** argv)
 
         if (training_file.size() == 0)
         {
+            std::cout << train_input.first << ": ";
             throw std::runtime_error("Training file is empty");
         }
 
@@ -392,6 +393,7 @@ int main(int argc, char** argv)
         //parse_group_csv_file(test_inputfile, '{', '}', test_file);
         if (test_file.size() == 0)
         {
+            std::cout << test_input.first << ": ";
             throw std::runtime_error("Test file is empty");
         }
 
@@ -850,8 +852,11 @@ int main(int argc, char** argv)
 
         for (idx = 0; idx < train_images.size(); ++idx)
         {
+            if (array_depth < 3)
+                dlib::assign_image(rgb_img, train_images[idx][0]);
+            else
+                merge_channels(train_images[idx], rgb_img);
 
-            merge_channels(train_images[idx], rgb_img);
             win.clear_overlay();
             //win.set_image(rgb_img);
 
@@ -931,9 +936,9 @@ int main(int argc, char** argv)
                 draw_rectangle(rgb_img, train_labels[idx][jdx].rect, dlib::rgb_pixel(0,255,0),2);
             } 
             */
-            //save results in image form
-            //std::string image_save_name = output_save_location + "train_save_image_" + version + num2str(idx, "_%03d.png");
-            //save_png(tmp_img, image_save_name);
+            //save results to an image
+            std::string image_save_name = image_save_location + "train_save_image_" + version + num2str(idx, "_%05d.png");
+            //save_png(rgb_img, image_save_name);
 
             training_results += tr;
             //dlib::sleep(50);
@@ -958,7 +963,11 @@ int main(int argc, char** argv)
 
         for (idx = 0; idx < test_images.size(); ++idx)
         {
-            merge_channels(test_images[idx], rgb_img);
+            if (array_depth < 3)
+                dlib::assign_image(rgb_img, test_images[idx][0]);
+            else
+                merge_channels(test_images[idx], rgb_img);
+
             win.clear_overlay();
 
             std::vector<dlib::mmod_rect> dnn_labels;
@@ -1023,9 +1032,9 @@ int main(int argc, char** argv)
                 // draw_rectangle(rgb_img, test_labels[idx][jdx].rect, dlib::rgb_pixel(0, 255, 0), 2);
             // }
 
-            //save results in image form
-            //std::string image_save_name = image_save_location + "test_img_" + version + num2str(idx, "_%05d.png");
-            //save_png(tmp_img, image_save_name);
+            //save results to an image
+            std::string image_save_name = image_save_location + "test_img_" + version + num2str(idx, "_%05d.png");
+            //save_png(rgb_img, image_save_name);
 
             test_results += tr;
             //dlib::sleep(50);
