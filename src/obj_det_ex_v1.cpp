@@ -1041,7 +1041,8 @@ int main(int argc, char** argv)
             //std::cin.ignore();
 
         }
-        DataLogStream << "------------------------------------------------------------------" << std::endl;
+        DataLogStream << "------------------------------------------------------------------" << std::endl << std::endl;
+        std::cout << "------------------------------------------------------------------" << std::endl << std::endl;
 
 /*
         // output the test results
@@ -1079,7 +1080,7 @@ int main(int argc, char** argv)
 
 
         // save the results to the log file
-        DataLogStream << std::endl << "------------------------------------------------------------------" << std::endl;
+        DataLogStream << "------------------------------------------------------------------" << std::endl;
         DataLogStream << "Training Results (detction_accuracy, correct_detects, false_positives, missing_detections): " << std::fixed << std::setprecision(4) << training_results(0, 0) / (double)training_file.size() << ", " << training_results(0, 3) << ", " << training_results(0, 4) << ", " << training_results(0, 5) << std::endl;
         DataLogStream << "class_name, detction_accuracy, correct_detects, groundtruth" << std::endl;
         for (jdx = 0; jdx < num_classes; ++jdx)
