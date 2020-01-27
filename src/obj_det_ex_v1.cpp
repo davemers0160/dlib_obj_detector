@@ -1041,6 +1041,8 @@ int main(int argc, char** argv)
             //std::cin.ignore();
 
         }
+        DataLogStream << "------------------------------------------------------------------" << std::endl;
+
 /*
         // output the test results
         std::cout << "------------------------------------------------------------------" << std::endl;
@@ -1054,14 +1056,23 @@ int main(int argc, char** argv)
         DataLogStream << "------------------------------------------------------------------" << std::endl;
 */
 
+        // output the training results
+        std::cout << "------------------------------------------------------------------" << std::endl;
+        for (jdx = 0; jdx < num_classes; ++jdx)
+        {
+            double acc = (train_label_stats[jdx].count == 0) ? 0.0 : train_label_stats[jdx].match_count / (double)train_label_stats[jdx].count;
+            std::cout << std::left << std::setw(15) << std::setfill(' ') << (class_names[jdx] + ":") << std::fixed << std::setprecision(4) << acc << ", " << train_label_stats[jdx].match_count << ", " << train_label_stats[jdx].count << std::endl;
+        }
+        std::cout << "Training Results (detction_accuracy, correct_detects, false_positives, missing_detections):  " << std::fixed << std::setprecision(4) << training_results(0, 0) / (double)training_file.size() << ", " << training_results(0, 3) << ", " << training_results(0, 4) << ", " << training_results(0, 5) << std::endl;
+        std::cout << "------------------------------------------------------------------" << std::endl << std::endl;
+
+
         // output the test results
         std::cout << "------------------------------------------------------------------" << std::endl;
-        DataLogStream << "------------------------------------------------------------------" << std::endl;
         for (jdx = 0; jdx < num_classes; ++jdx)
         {
             double acc = (test_label_stats[jdx].count == 0) ? 0.0 : test_label_stats[jdx].match_count / (double)test_label_stats[jdx].count;
             std::cout << std::left << std::setw(15) << std::setfill(' ') << (class_names[jdx] + ":") << std::fixed << std::setprecision(4) << acc << ", " << test_label_stats[jdx].match_count << ", " << test_label_stats[jdx].count << std::endl;
-            //DataLogStream << std::left << std::setw(15) << std::setfill(' ') << (class_names[jdx] + ":") << std::fixed << std::setprecision(4) << acc << ", " << test_label_stats[jdx].match_count << ", " << test_label_stats[jdx].count << std::endl;
         }
         std::cout << "Testing Results (detction_accuracy, correct_detects, false_positives, missing_detections):  " << std::fixed << std::setprecision(4) << test_results(0, 0) / (double)test_file.size() << ", " << test_results(0, 3) << ", " << test_results(0, 4) << ", " << test_results(0, 5) << std::endl;
         std::cout << "------------------------------------------------------------------" << std::endl;
