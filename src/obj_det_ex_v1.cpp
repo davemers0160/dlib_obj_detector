@@ -136,9 +136,6 @@ int main(int argc, char** argv)
     int32_t stop = -1;
     std::vector<std::string> stop_codes = { "Minimum Learning Rate Reached.", "Max Training Time Reached", "Max Training Steps Reached" };
     std::vector<double> stop_criteria;
-    //uint64_t num_crops;
-    //std::pair<uint64_t, uint64_t> crop_size;
-    //std::pair<double, double> angles = std::make_pair(15.0, 15.0);
     training_params tp;
     std::vector<uint32_t> filter_num;
 
@@ -520,11 +517,8 @@ int main(int argc, char** argv)
         std::cout << "num detector windows: " << options.detector_windows.size() << std::endl;
         DataLogStream << "num detector windows: " << options.detector_windows.size() << std::endl;
 
-        // for (auto& w : options.detector_windows)
-        // {
-            // std::cout << "detector window (w x h): " << w.label << " - " << w.width << " x " << w.height << std::endl;
-            // DataLogStream << "detector window (w x h): " << w.label << " - " << w.width << " x " << w.height << std::endl;
-        // }
+        std::cout << "bounding box configuration (min, max): " << target_size.first << ", " << target_size.second << std::endl;;
+        DataLogStream << "bounding box configuration (min, max): " << target_size.first << ", " << target_size.second << std::endl;;
 
         std::set<std::string> tmp_names;
 
@@ -573,23 +567,7 @@ int main(int argc, char** argv)
 
 
         // Now we are ready to create our network and trainer.
-//#if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
-        //net_type net;
-
-        // load in the convolutional filter numbers from the input file
-        //config_net(net, options, filter_num);
         net_type net = config_net<net_type>(options, filter_num);
-
-//#else
-        // check for the gcc version
-        //#if defined(__GNUC__) && (__GNUC__ > 5)
-        //    net_type net(options);
-            //config_net(net, options, filter_num);
-        //#else
-        //    net_type net;
-        //    config_net(net, options, filter_num);
-        //#endif
-//#endif
 
         // The MMOD loss requires that the number of filters in the final network layer equal
         // options.detector_windows.size().  So we set that here as well.
@@ -615,7 +593,7 @@ int main(int argc, char** argv)
 
         // Usually you want to give the cropper whatever min sizes you passed to the
         // mmod_options constructor, which is what we do here.
-        cropper.set_min_object_size(target_size.second+2, target_size.first+2);   // plane
+        cropper.set_min_object_size(target_size.second+2, target_size.first+2);
 
         cropper.set_max_object_size(1.0);   // 0.8
 
@@ -666,8 +644,6 @@ int main(int argc, char** argv)
         std::vector<label_stats> train_label_stats(num_classes, label_stats(0,0));
         std::vector<label_stats> test_label_stats(num_classes, label_stats(0,0));
         
-        //double train_lr = trainer.get_learning_rate();
-
         uint64_t test_step_count = 100;
 
         std::cout << "------------------------------------------------------------------" << std::endl;
@@ -858,16 +834,13 @@ int main(int argc, char** argv)
                 merge_channels(train_images[idx], rgb_img);
 
             win.clear_overlay();
-            //win.set_image(rgb_img);
 
             std::vector<dlib::mmod_rect> dnn_labels;
             std::vector<label_stats> ls(num_classes, label_stats(0, 0));
 
             // get the rough classification time per image
             start_time = chrono::system_clock::now();
-            //dlib::matrix<double, 1, 6> tr = eval_net_performance(test_net, train_images[idx], train_labels[idx], dnn_labels, target_size.first, fda_test_box_overlap(0.4, 1.0));
             dlib::matrix<double, 1, 6> tr = eval_net_performance(test_net, train_images[idx], train_labels[idx], dnn_labels, target_size.first, fda_test_box_overlap(0.4, 1.0), class_names, ls);
-
             stop_time = chrono::system_clock::now();
 
             elapsed_time = chrono::duration_cast<d_sec>(stop_time - start_time);
@@ -897,18 +870,6 @@ int main(int argc, char** argv)
             DataLogStream << std::left << std::setw(15) << std::setfill(' ') << "Results: " << std::fixed << std::setprecision(4) << tr(0, 0) << ", " << tr(0, 3) << ", " << tr(0, 4) << ", " << tr(0, 5) << std::endl;
 
             //overlay the dnn detections on the image
-            // std::string results = num2str(idx, "%04d");
-            // for (jdx = 0; jdx < dnn_labels.size(); ++jdx)
-            // {
-                // win.add_overlay(dnn_labels[jdx].rect, dlib::rgb_pixel(255, 0, 0));
-                // draw_rectangle(rgb_img, dnn_labels[jdx].rect, dlib::rgb_pixel(255, 0, 0),2);
-                // DataLogStream << "Detect Confidence Level (" << dnn_labels[jdx].label << "): " << dnn_labels[jdx].detection_confidence << std::endl;
-                // std::cout << "Detect Confidence Level (" << dnn_labels[jdx].label << "): " << dnn_labels[jdx].detection_confidence << std::endl;
-                // results = results + ",{" + num2str(dnn_labels[jdx].rect.left(),"%d,") + num2str(dnn_labels[jdx].rect.top(),"%d,") + num2str(dnn_labels[jdx].rect.width(),"%d,") + num2str(dnn_labels[jdx].rect.height(),"%d,") + dnn_labels[jdx].label + "},";
-            // }
-                // DataLogStream << results.substr(0,results.length()-2) << std::endl; 
-
-            //overlay the dnn detections on the image
             for (jdx = 0; jdx < dnn_labels.size(); ++jdx)
             {
                 auto& class_index = std::find(class_names.begin(), class_names.end(), dnn_labels[jdx].label);
@@ -919,23 +880,6 @@ int main(int argc, char** argv)
             }
             win.set_image(rgb_img);
 
-            /*
-            //overlay the dnn detections on the image
-            for (jdx = 0; jdx < dnn_labels.size(); ++jdx)
-            {
-                win.add_overlay(dnn_labels[jdx].rect, dlib::rgb_pixel(255, 0, 0));
-                draw_rectangle(rgb_img, dnn_labels[jdx].rect, dlib::rgb_pixel(255, 0, 0),2);
-                DataLogStream << "Detect Confidence Level (" << dnn_labels[jdx].label << "): " << dnn_labels[jdx].detection_confidence << std::endl;
-                std::cout << "Detect Confidence Level (" << dnn_labels[jdx].label << "): " << dnn_labels[jdx].detection_confidence << std::endl;
-            } 
-
-            // overlay the ground truth boxes on the image
-            for (jdx = 0; jdx < train_labels[idx].size(); ++jdx)
-            {
-                win.add_overlay(train_labels[idx][jdx].rect, dlib::rgb_pixel(0, 255, 0));
-                draw_rectangle(rgb_img, train_labels[idx][jdx].rect, dlib::rgb_pixel(0,255,0),2);
-            } 
-            */
             //save results to an image
             std::string image_save_name = image_save_location + "train_save_image_" + version + num2str(idx, "_%05d.png");
             //save_png(rgb_img, image_save_name);
@@ -975,7 +919,6 @@ int main(int argc, char** argv)
 
             // get the rough classification time per image
             start_time = chrono::system_clock::now();
-            //dlib::matrix<double, 1, 6> tr = eval_net_performance(test_net, test_images[idx], test_labels[idx], dnn_labels, target_size.first, fda_test_box_overlap(0.4, 1.0));
             dlib::matrix<double, 1, 6> tr = eval_net_performance(test_net, test_images[idx], test_labels[idx], dnn_labels, target_size.first, fda_test_box_overlap(0.4, 1.0), class_names, ls);
             stop_time = chrono::system_clock::now();
 
@@ -1006,15 +949,6 @@ int main(int argc, char** argv)
             DataLogStream << std::left << std::setw(15) << std::setfill(' ') << "Results: " << std::fixed << std::setprecision(4) << tr(0, 0) << ", " << tr(0, 3) << ", " << tr(0, 4) << ", " << tr(0, 5) << std::endl;
          
             //overlay the dnn detections on the image
-            // for (jdx = 0; jdx < dnn_labels.size(); ++jdx)
-            // {
-                // win.add_overlay(dnn_labels[jdx].rect, dlib::rgb_pixel(255, 0, 0));
-                // draw_rectangle(rgb_img, dnn_labels[jdx].rect, dlib::rgb_pixel(255, 0, 0), 2);
-                // DataLogStream << "Detect Confidence Level (" << dnn_labels[jdx].label << "): " << dnn_labels[jdx].detection_confidence << std::endl;
-                // std::cout << "Detect Confidence Level (" << dnn_labels[jdx].label << "): " << dnn_labels[jdx].detection_confidence << std::endl;
-            // }
-
-            //overlay the dnn detections on the image
             for (jdx = 0; jdx < dnn_labels.size(); ++jdx)
             {
                 auto& class_index = std::find(class_names.begin(), class_names.end(), dnn_labels[jdx].label);
@@ -1024,13 +958,6 @@ int main(int argc, char** argv)
                 std::cout << "Detect Confidence Level (" << dnn_labels[jdx].label << "): " << dnn_labels[jdx].detection_confidence << std::endl;
             }
             win.set_image(rgb_img);
-
-            // overlay the ground truth boxes on the image
-            // for (jdx = 0; jdx < test_labels[idx].size(); ++jdx)
-            // {
-                // win.add_overlay(test_labels[idx][jdx].rect, dlib::rgb_pixel(0, 255, 0));
-                // draw_rectangle(rgb_img, test_labels[idx][jdx].rect, dlib::rgb_pixel(0, 255, 0), 2);
-            // }
 
             //save results to an image
             std::string image_save_name = image_save_location + "test_img_" + version + num2str(idx, "_%05d.png");
