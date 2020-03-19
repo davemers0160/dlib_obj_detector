@@ -21,11 +21,8 @@
 // Custom includes
 #include "obj_det_dnn.h"
 #include "get_platform.h"
-//#include "file_parser.h"
 #include "get_current_time.h"
 #include "num2string.h"
-#include "overlay_bounding_box.h"
-//#include "gorgon_capture.h"
 
 // Net Version
 #include "yj_net_v9.h"
@@ -40,9 +37,13 @@
 #include <dlib/dnn.h>
 #include <dlib/image_io.h>
 #include <dlib/data_io.h>
-#include <dlib/gui_widgets.h>
 #include <dlib/image_transforms.h>
 #include <dlib/rand.h>
+
+#if !defined(DLIB_NO_GUI_SUPPORT)
+#include "overlay_bounding_box.h"
+#include <dlib/gui_widgets.h>
+#endif
 
 // dlib-contrib includes
 #include "array_image_operations.h"
@@ -148,10 +149,13 @@ int main(int argc, char** argv)
     uint64_t epoch = 0;
     uint64_t index = 0;   
 
-    //create window to display images
-    dlib::image_window win;
     dlib::rgb_pixel color;
     dlib::matrix<dlib::rgb_pixel> rgb_img;
+
+#if !defined(DLIB_NO_GUI_SUPPORT)
+    //create window to display images
+    dlib::image_window win;
+#endif
 
     dlib::rand rnd;
     rnd = dlib::rand(time(NULL));
@@ -828,12 +832,6 @@ int main(int argc, char** argv)
 
         for (idx = 0; idx < train_images.size(); ++idx)
         {
-            if (array_depth < 3)
-                dlib::assign_image(rgb_img, train_images[idx][0]);
-            else
-                merge_channels(train_images[idx], rgb_img);
-
-            win.clear_overlay();
 
             std::vector<dlib::mmod_rect> dnn_labels;
             std::vector<label_stats> ls(num_classes, label_stats(0, 0));
@@ -869,6 +867,14 @@ int main(int argc, char** argv)
             std::cout << std::left << std::setw(15) << std::setfill(' ') << "Results: " << std::fixed << std::setprecision(4) << tr(0, 0) << ", " << tr(0, 3) << ", " << tr(0, 4) << ", " << tr(0, 5) << std::endl;
             DataLogStream << std::left << std::setw(15) << std::setfill(' ') << "Results: " << std::fixed << std::setprecision(4) << tr(0, 0) << ", " << tr(0, 3) << ", " << tr(0, 4) << ", " << tr(0, 5) << std::endl;
 
+            if (array_depth < 3)
+                dlib::assign_image(rgb_img, train_images[idx][0]);
+            else
+                merge_channels(train_images[idx], rgb_img);
+
+#if !defined(DLIB_NO_GUI_SUPPORT)
+            win.clear_overlay();
+
             //overlay the dnn detections on the image
             for (jdx = 0; jdx < dnn_labels.size(); ++jdx)
             {
@@ -879,6 +885,7 @@ int main(int argc, char** argv)
                 std::cout << "Detect Confidence Level (" << dnn_labels[jdx].label << "): " << dnn_labels[jdx].detection_confidence << std::endl;
             }
             win.set_image(rgb_img);
+#endif
 
             //save results to an image
             std::string image_save_name = image_save_location + "train_save_image_" + version + num2str(idx, "_%05d.png");
@@ -907,12 +914,6 @@ int main(int argc, char** argv)
 
         for (idx = 0; idx < test_images.size(); ++idx)
         {
-            if (array_depth < 3)
-                dlib::assign_image(rgb_img, test_images[idx][0]);
-            else
-                merge_channels(test_images[idx], rgb_img);
-
-            win.clear_overlay();
 
             std::vector<dlib::mmod_rect> dnn_labels;
             std::vector<label_stats> ls(num_classes, label_stats(0, 0));
@@ -947,7 +948,15 @@ int main(int argc, char** argv)
             }
             std::cout << std::left << std::setw(15) << std::setfill(' ') << "Results: " << std::fixed << std::setprecision(4) << tr(0, 0) << ", " << tr(0, 3) << ", " << tr(0, 4) << ", " << tr(0, 5) << std::endl;
             DataLogStream << std::left << std::setw(15) << std::setfill(' ') << "Results: " << std::fixed << std::setprecision(4) << tr(0, 0) << ", " << tr(0, 3) << ", " << tr(0, 4) << ", " << tr(0, 5) << std::endl;
-         
+
+            if (array_depth < 3)
+                dlib::assign_image(rgb_img, test_images[idx][0]);
+            else
+                merge_channels(test_images[idx], rgb_img);
+
+#if !defined(DLIB_NO_GUI_SUPPORT)
+            win.clear_overlay();
+
             //overlay the dnn detections on the image
             for (jdx = 0; jdx < dnn_labels.size(); ++jdx)
             {
@@ -958,6 +967,7 @@ int main(int argc, char** argv)
                 std::cout << "Detect Confidence Level (" << dnn_labels[jdx].label << "): " << dnn_labels[jdx].detection_confidence << std::endl;
             }
             win.set_image(rgb_img);
+#endif
 
             //save results to an image
             std::string image_save_name = image_save_location + "test_img_" + version + num2str(idx, "_%05d.png");
