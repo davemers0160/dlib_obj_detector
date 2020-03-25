@@ -18,8 +18,6 @@ template <long num_filters, typename SUBNET> using con5 = dlib::con<num_filters,
 template <long num_filters, typename SUBNET> using con7 = dlib::con<num_filters, 7, 7, 1, 1, SUBNET>;
 template <long num_filters, typename SUBNET> using con9 = dlib::con<num_filters, 9, 9, 1, 1, SUBNET>;
 
-template <long num_filters, typename SUBNET> using con31 = dlib::con<num_filters, 3, 1, 1, 1, SUBNET>;
-template <long num_filters, typename SUBNET> using con13 = dlib::con<num_filters, 1, 3, 1, 1, SUBNET>;
 template <long num_filters, typename SUBNET> using con51 = dlib::con<num_filters, 5, 1, 1, 1, SUBNET>;
 template <long num_filters, typename SUBNET> using con15 = dlib::con<num_filters, 1, 5, 1, 1, SUBNET>;
 template <long num_filters, typename SUBNET> using con71 = dlib::con<num_filters, 7, 1, 1, 1, SUBNET>;
@@ -100,37 +98,37 @@ input[4] -> downsampler -> rcon3 -> rcon3 -> rcon3 -> con6
 // layer causes the network to operate over a spatial pyramid, making the detector
 // scale invariant.  
 
-using yj_net_type = dlib::loss_mmod<con7<1,
+using net_type = dlib::loss_mmod<con7<1,
     rcon3<256, rcon3<128, rcon3<64,
 
     dlib::relu<dlib::bn_con<con2d<64,
-    dlib::relu<dlib::bn_con<con13<32, con31<32,
     dlib::relu<dlib::bn_con<con2d<64,
+    //dlib::relu<dlib::bn_con<con2d<64,
 
     dlib::relu<dlib::bn_con<con15<32, con51<32,
-    mp2<dlib::input_rgb_image_pyramid<dlib::pyramid_down<5>>>
-    >>>> >>> >>>> >>> >>> >>;
+    mp7<dlib::input_rgb_image_pyramid<dlib::pyramid_down<5>>>
+    >>>> >>> >>> >>> >>;
 
-using ayj_net_type = dlib::loss_mmod<con7<1,
+using anet_type = dlib::loss_mmod<con7<1,
     arcon3<128, arcon3<64, arcon3<64, 
     
     dlib::relu<dlib::affine<con2d<64,
-    dlib::relu<dlib::affine<con13<32, con31<32,
     dlib::relu<dlib::affine<con2d<64,
+    //dlib::relu<dlib::affine<con2d<64,
 
     dlib::relu<dlib::affine<con15<32, con51<32,
-    mp2<dlib::input_rgb_image_pyramid<dlib::pyramid_down<5>>>
-    >>>> >>> >>>> >>> >>> >>;
+    mp7<dlib::input_rgb_image_pyramid<dlib::pyramid_down<5>>>
+    >>>> >>> >>> >>> >>;
 
 // ----------------------------------------------------------------------------------------
 // Configuration function
 // ----------------------------------------------------------------------------------------
 
 template <typename net_type>
-void config_net(net_type &net, dlib::mmod_options options, std::vector<uint32_t> params)
+net_type config_net(dlib::mmod_options options, std::vector<uint32_t> params)
 {
 
-    net = net_type(options, dlib::num_con_outputs(params[0]),
+    net_type net = net_type(options, dlib::num_con_outputs(params[0]),
         dlib::num_con_outputs(params[1]),
         dlib::num_con_outputs(params[2]),
         dlib::num_con_outputs(params[3]),
@@ -139,7 +137,9 @@ void config_net(net_type &net, dlib::mmod_options options, std::vector<uint32_t>
         dlib::num_con_outputs(params[6]), 
         dlib::num_con_outputs(params[7]));
 
-
+    net.subnet().layer_details().set_num_filters(options.detector_windows.size());
+    return net;
+    
 }   // end of config_net
 
 // ----------------------------------------------------------------------------------------

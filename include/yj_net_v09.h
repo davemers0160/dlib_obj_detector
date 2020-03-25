@@ -8,7 +8,7 @@
 
 #include "input_array_image_pryamid.h"
 
-extern const uint32_t array_depth = 3;
+extern const uint32_t array_depth = 1;
 //extern const uint32_t secondary = 1;
 
 // --------------------------------- Conv Filter Setup ------------------------------------
@@ -17,6 +17,16 @@ template <long num_filters, typename SUBNET> using con3 = dlib::con<num_filters,
 template <long num_filters, typename SUBNET> using con5 = dlib::con<num_filters, 5, 5, 1, 1, SUBNET>;
 template <long num_filters, typename SUBNET> using con7 = dlib::con<num_filters, 7, 7, 1, 1, SUBNET>;
 template <long num_filters, typename SUBNET> using con9 = dlib::con<num_filters, 9, 9, 1, 1, SUBNET>;
+
+template <long num_filters, typename SUBNET> using con31 = dlib::con<num_filters, 3, 1, 1, 1, SUBNET>;
+template <long num_filters, typename SUBNET> using con13 = dlib::con<num_filters, 1, 3, 1, 1, SUBNET>;
+template <long num_filters, typename SUBNET> using con51 = dlib::con<num_filters, 5, 1, 1, 1, SUBNET>;
+template <long num_filters, typename SUBNET> using con15 = dlib::con<num_filters, 1, 5, 1, 1, SUBNET>;
+template <long num_filters, typename SUBNET> using con71 = dlib::con<num_filters, 7, 1, 1, 1, SUBNET>;
+template <long num_filters, typename SUBNET> using con17 = dlib::con<num_filters, 1, 7, 1, 1, SUBNET>;
+template <long num_filters, typename SUBNET> using con91 = dlib::con<num_filters, 9, 1, 1, 1, SUBNET>;
+template <long num_filters, typename SUBNET> using con19 = dlib::con<num_filters, 1, 9, 1, 1, SUBNET>;
+
 
 template <long num_filters, typename SUBNET> using con2d = dlib::con<num_filters, 2, 2, 2, 2, SUBNET>;
 template <long num_filters, typename SUBNET> using con3d = dlib::con<num_filters, 3, 3, 2, 2, SUBNET>;
@@ -42,18 +52,34 @@ template <long num_filters, typename SUBNET> using cont9u = dlib::cont<num_filte
 // --------------------------------------block definitions---------------------------------
 template<typename SUBNET> using mp2 = dlib::max_pool<2, 2, 2, 2, SUBNET>;
 template<typename SUBNET> using mp3 = dlib::max_pool<3, 3, 2, 2, SUBNET>;
+template<typename SUBNET> using mp7 = dlib::max_pool<7, 7, 2, 2, SUBNET>;
+template<typename SUBNET> using mp9 = dlib::max_pool<9, 9, 2, 2, SUBNET>;
 
-template <int N1, int N2, int N3, typename SUBNET> using blk = dlib::bn_con<con1<N1, dlib::prelu<dlib::bn_con<con3<N2, dlib::prelu<dlib::bn_con<con1<N3, SUBNET>>>>>>>>;
-template <int N1, int N2, int N3, typename SUBNET> using ablk = dlib::affine<con1<N1, dlib::prelu<dlib::affine<con3<N2, dlib::prelu<dlib::affine<con1<N3, SUBNET>>>>>>>>;
+
+template <int N1, int N2, int N3, typename SUBNET> using blk3 = dlib::bn_con<con1<N1, dlib::prelu<dlib::bn_con<con3<N2, dlib::prelu<dlib::bn_con<con1<N3, SUBNET>>>>>>>>;
+template <int N1, int N2, int N3, typename SUBNET> using ablk3 = dlib::affine<con1<N1, dlib::prelu<dlib::affine<con3<N2, dlib::prelu<dlib::affine<con1<N3, SUBNET>>>>>>>>;
+
+template <int N1, int N2, int N3, typename SUBNET> using blk5 = dlib::bn_con<con1<N1, dlib::prelu<dlib::bn_con<con5<N2, dlib::prelu<dlib::bn_con<con1<N3, SUBNET>>>>>>>>;
+template <int N1, int N2, int N3, typename SUBNET> using ablk5 = dlib::affine<con1<N1, dlib::prelu<dlib::affine<con5<N2, dlib::prelu<dlib::affine<con1<N3, SUBNET>>>>>>>>;
+
 template <int N, typename SUBNET> using cbp3_blk = dlib::prelu<dlib::bn_con<con3<N, SUBNET>>>;
+template <int N, typename SUBNET> using cbp5_blk = dlib::prelu<dlib::bn_con<con5<N, SUBNET>>>;
+
+template <int N, typename SUBNET> using acbp3_blk = dlib::prelu<dlib::affine<con3<N, SUBNET>>>;
+template <int N, typename SUBNET> using acbp5_blk = dlib::prelu<dlib::affine<con5<N, SUBNET>>>;
+
 
 // --------------------------------------residual blocks-----------------------------------
 
 template <int N1, int N2, int N3, typename SUBNET>
-using res_blk = dlib::prelu<dlib::add_prev1<blk<N1, N2, N3, dlib::tag1<SUBNET>>>>;
+using res_blk3 = dlib::prelu<dlib::add_prev1<blk3<N1, N2, N3, dlib::tag1<SUBNET>>>>;
 template <int N1, int N2, int N3, typename SUBNET>
-using ares_blk = dlib::prelu<dlib::add_prev1<ablk<N1, N2, N3, dlib::tag1<SUBNET>>>>;
+using ares_blk3 = dlib::prelu<dlib::add_prev1<ablk3<N1, N2, N3, dlib::tag1<SUBNET>>>>;
 
+template <int N1, int N2, int N3, typename SUBNET>
+using res_blk5 = dlib::prelu<dlib::add_prev1<blk5<N1, N2, N3, dlib::tag1<SUBNET>>>>;
+template <int N1, int N2, int N3, typename SUBNET>
+using ares_blk5 = dlib::prelu<dlib::add_prev1<ablk5<N1, N2, N3, dlib::tag1<SUBNET>>>>;
 
 
 
@@ -87,35 +113,52 @@ input[4] -> downsampler -> rcon3 -> rcon3 -> rcon3 -> con6
 // layer causes the network to operate over a spatial pyramid, making the detector
 // scale invariant.  
 
-using yj_net_type = dlib::loss_mmod<con9<1,
-    rcon5<128, rcon5<64, rcon5<64, downsampler<64, 32, 16,
-    dlib::input_rgb_image_pyramid<dlib::pyramid_down<8>>
-    >>>> >>;
+using net_type = dlib::loss_mmod<con7<1,
 
-using ayj_net_type = dlib::loss_mmod<con9<1,
-    arcon5<128, arcon5<64, arcon5<64, adownsampler<64, 32, 16,
-    dlib::input_rgb_image_pyramid<dlib::pyramid_down<8>>
-    >>>> >>;
+    res_blk3<128,128,64, cbp3_blk<128,
+    con2d<64, res_blk3<64,64,32, cbp3_blk<64,
+    con2d<32, res_blk5<32,32,16, cbp5_blk<32,
+
+    mp2<dlib::input_grayscale_image_pyramid<dlib::pyramid_down<5>>>
+    >>> >>> >> >>;
+
+using anet_type = dlib::loss_mmod<con7<1,
+
+    ares_blk3<128, 128, 64, acbp3_blk<128,
+    con2d<64, ares_blk3<64, 64, 32, acbp3_blk<64,
+    con2d<32, ares_blk5<32, 32, 16, acbp5_blk<32,
+
+    mp2<dlib::input_grayscale_image_pyramid<dlib::pyramid_down<5>>>
+    >>> >>> >> >>;
 
 // ----------------------------------------------------------------------------------------
 // Configuration function
 // ----------------------------------------------------------------------------------------
 
 template <typename net_type>
-void config_net(net_type &net, dlib::mmod_options options, std::vector<uint32_t> params)
+net_type config_net(dlib::mmod_options options, std::vector<uint32_t> params)
 {
 
-    net = net_type(options, dlib::num_con_outputs(params[0]),
+    net_type net = net_type(options, dlib::num_con_outputs(params[0]),
         dlib::num_con_outputs(params[1]),
         dlib::num_con_outputs(params[2]),
         dlib::num_con_outputs(params[3]),
         dlib::num_con_outputs(params[4]),
         dlib::num_con_outputs(params[5]),
-        dlib::num_con_outputs(params[6]));
+        dlib::num_con_outputs(params[6]), 
+        dlib::num_con_outputs(params[7]),
+        dlib::num_con_outputs(params[8]),
+        dlib::num_con_outputs(params[9]),
+        dlib::num_con_outputs(params[10]),
+        dlib::num_con_outputs(params[11]),
+        dlib::num_con_outputs(params[12]),
+        dlib::num_con_outputs(params[13]),
+        dlib::num_con_outputs(params[14])
+    );
 
-    //net = net_type(options);
-  
-
+    net.subnet().layer_details().set_num_filters(options.detector_windows.size());
+    return net;
+    
 }   // end of config_net
 
 // ----------------------------------------------------------------------------------------

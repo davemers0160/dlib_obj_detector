@@ -96,7 +96,7 @@ input[4] -> downsampler -> rcon3 -> rcon3 -> rcon3 -> con6
 // layer causes the network to operate over a spatial pyramid, making the detector
 // scale invariant.  
 
-using yj_net_type = dlib::loss_mmod<con9<1,
+using net_type = dlib::loss_mmod<con9<1,
     rcon5<256, rcon5<128, rcon5<64,
 
     dlib::relu<dlib::bn_con<con5d<64,
@@ -107,7 +107,7 @@ using yj_net_type = dlib::loss_mmod<con9<1,
     mp9<dlib::input_rgb_image_pyramid<dlib::pyramid_down<5>>>
     >>>> >>> >>> >>> >>;
 
-using ayj_net_type = dlib::loss_mmod<con9<1,
+using anet_type = dlib::loss_mmod<con9<1,
     arcon5<128, arcon5<64, arcon5<64, 
     
     dlib::relu<dlib::affine<con5d<64,
@@ -123,10 +123,10 @@ using ayj_net_type = dlib::loss_mmod<con9<1,
 // ----------------------------------------------------------------------------------------
 
 template <typename net_type>
-void config_net(net_type &net, dlib::mmod_options options, std::vector<uint32_t> params)
+net_type config_net(dlib::mmod_options options, std::vector<uint32_t> params)
 {
 
-    net = net_type(options, dlib::num_con_outputs(params[0]),
+    net_type net = net_type(options, dlib::num_con_outputs(params[0]),
         dlib::num_con_outputs(params[1]),
         dlib::num_con_outputs(params[2]),
         dlib::num_con_outputs(params[3]),
@@ -135,7 +135,9 @@ void config_net(net_type &net, dlib::mmod_options options, std::vector<uint32_t>
         dlib::num_con_outputs(params[6]), 
         dlib::num_con_outputs(params[7]));
 
-
+    net.subnet().layer_details().set_num_filters(options.detector_windows.size());
+    return net;
+    
 }   // end of config_net
 
 // ----------------------------------------------------------------------------------------

@@ -25,7 +25,7 @@
 #include "num2string.h"
 
 // Net Version
-#include "yj_net_v9.h"
+#include "yj_net_v10.h"
 #include "load_data.h"
 #include "load_oid_data.h"
 #include "eval_net_performance.h"
@@ -203,24 +203,7 @@ int main(int argc, char** argv)
     else
     {
         // Ubuntu
-        if(platform.compare(0,8,"MainGear") == 0)
-        {
-            program_root = "/home/owner/Projects/machineLearningResearch/";
-        }
-        else
-        {
-            if (platform.compare(0,7,"SL02319") == 0)
-            {
-                // fill in the location of where the root program is running
-                program_root = "/media/daleas/DATA/Ashley_ML/machineLearningResearch/";
-            }
-            else
-            {
-                // fill in the location of where the root program is running
-                program_root = "/mnt/data/machineLearningResearch/";
-            }
-
-        }
+        program_root = "/home/owner/Projects/dlib_obj_detector/";
     }
 
     sync_save_location = save_directory + "nets/";
@@ -287,10 +270,6 @@ int main(int argc, char** argv)
         train_data_directory = training_file[0][0];
 #else
         if (HPC == 1)
-        {
-            train_data_directory = training_file[0][3];
-        }
-        else if (platform.compare(0,7,"SL02319") == 0)
         {
             train_data_directory = training_file[0][2];
         }
@@ -403,10 +382,6 @@ int main(int argc, char** argv)
         test_data_directory = test_file[0][0];
 #else
         if (HPC == 1)
-        {
-            test_data_directory = test_file[0][2];
-        }
-        else if (platform.compare(0,7,"SL02319") == 0)
         {
             test_data_directory = test_file[0][2];
         }
@@ -575,7 +550,7 @@ int main(int argc, char** argv)
 
         // The MMOD loss requires that the number of filters in the final network layer equal
         // options.detector_windows.size().  So we set that here as well.
-        net.subnet().layer_details().set_num_filters(options.detector_windows.size());
+        //net.subnet().layer_details().set_num_filters(options.detector_windows.size());
 
         dlib::dnn_trainer<net_type, dlib::adam> trainer(net, dlib::adam(0.0001, 0.9, 0.99),  gpu);
         trainer.set_learning_rate(tp.intial_learning_rate);
