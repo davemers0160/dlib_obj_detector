@@ -83,21 +83,19 @@ input[4] -> downsampler -> rcon3 -> rcon3 -> rcon3 -> con6
 // Finally, we define the entire network.   The special input_rgb_image_pyramid
 // layer causes the network to operate over a spatial pyramid, making the detector
 // scale invariant.  
-using yj_net_type = dlib::loss_mmod<con9<1,
-    res_blk<256, 128, 128, res_blk<256, 128, 128, res_blk<256, 128, 128,
-    con2d<256, res_blk<128, 64, 64, res_blk<128, 64, 64,
-    res_blk<64, 32, 32, res_blk<64, 32, 32, res_blk<64, 32, 32,
-    dlib::prelu<dlib::bn_con<con2d<64,
-    mp2<mp2<dlib::input_rgb_image_pyramid<dlib::pyramid_down<8>>>>
-    >>> >>> >>> >>> >>;
+using yj_net_type = dlib::loss_mmod<con9<1,    
+    res_blk<128, 64, 64, res_blk<128, 64, 64, res_blk<128, 64, 64,
+    con5d<128, res_blk<64, 32, 32,
+    con5d<64, res_blk<32, 16, 16,
+    con5d<32, dlib::input_rgb_image_pyramid<dlib::pyramid_down<8>>>
+    >> >> >>> >>;
 
 using ayj_net_type = dlib::loss_mmod<con9<1,
-    ares_blk<256, 128, 128, ares_blk<256, 128, 128, ares_blk<256, 128, 128,
-    con2d<256, ares_blk<128, 64, 64, ares_blk<128, 64, 64,
-    ares_blk<64, 32, 32, ares_blk<64, 32, 32, ares_blk<64, 32, 32,
-    dlib::prelu<dlib::affine<con2d<64,
-    mp2<mp2<dlib::input_rgb_image_pyramid<dlib::pyramid_down<8>>>>
-    >>> >>> >>> >>> >>;
+    ares_blk<128, 64, 64, ares_blk<128, 64, 64, ares_blk<128, 64, 64,
+    con5d<128, ares_blk<64, 32, 32,
+    con5d<64, ares_blk<32, 16, 16,
+    con5d<32, dlib::input_rgb_image_pyramid<dlib::pyramid_down<8>>>
+    >> >> >>> >>;
 
 // ----------------------------------------------------------------------------------------
 // Configuration function
