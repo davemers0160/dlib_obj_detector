@@ -623,7 +623,7 @@ int main(int argc, char** argv)
         std::vector<label_stats> train_label_stats(num_classes, label_stats(0,0));
         std::vector<label_stats> test_label_stats(num_classes, label_stats(0,0));
         
-        uint64_t test_step_count = 100;
+        uint64_t test_step_count = 2000;
 
         std::cout << "------------------------------------------------------------------" << std::endl;
         std::cout << "Starting Training..." << std::endl;
