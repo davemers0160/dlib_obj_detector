@@ -822,13 +822,13 @@ int main(int argc, char** argv)
             std::cout << "Image " << std::right << std::setw(5) << std::setfill('0') << idx << ": " << tr_image_files[idx] << std::endl;
             std::cout << "Image Size (h x w): " << train_images[idx][0].nr() << "x" << train_images[idx][0].nc() << std::endl;
             std::cout << "Classification Time (s): " << elapsed_time.count() << std::endl;
-            std::cout << "Results: " << std::fixed << std::setprecision(4) << tr(0, 0) << ", " << tr(0, 3) << ", " << tr(0, 4) << ", " << tr(0, 5) << std::endl;
+            //std::cout << "Results: " << std::fixed << std::setprecision(4) << tr(0, 0) << ", " << tr(0, 3) << ", " << tr(0, 4) << ", " << tr(0, 5) << std::endl;
 
             DataLogStream << "------------------------------------------------------------------" << std::endl;
             DataLogStream << "Image " << std::right << std::setw(5) << std::setfill('0') << idx << ": " << tr_image_files[idx] << std::endl;
             DataLogStream << "Image Size (h x w): " << train_images[idx][0].nr() << "x" << train_images[idx][0].nc() << std::endl;
             DataLogStream << "Classification Time (s): " << elapsed_time.count() << std::endl;
-            DataLogStream << "Results: " << std::fixed << std::setprecision(4) << tr(0, 0) << ", " << tr(0, 3) << ", " << tr(0, 4) << ", " << tr(0, 5) << std::endl;
+            //DataLogStream << "Results: " << std::fixed << std::setprecision(4) << tr(0, 0) << ", " << tr(0, 3) << ", " << tr(0, 4) << ", " << tr(0, 5) << std::endl;
 
             for (jdx=0; jdx< num_classes; ++jdx)
             {
@@ -904,13 +904,13 @@ int main(int argc, char** argv)
             std::cout << "Image " << std::right << std::setw(5) << std::setfill('0') << idx << ": " << te_image_files[idx] << std::endl;
             std::cout << "Image Size (h x w): " << test_images[idx][0].nr() << "x" << test_images[idx][0].nc() << std::endl;
             std::cout << "Classification Time (s): " << elapsed_time.count() << std::endl;
-            std::cout << "Results: " << std::fixed << std::setprecision(4) << tr(0, 0) << ", " << tr(0, 3) << ", " << tr(0, 4) << ", " << tr(0, 5) << std::endl;
+            //std::cout << "Results: " << std::fixed << std::setprecision(4) << tr(0, 0) << ", " << tr(0, 3) << ", " << tr(0, 4) << ", " << tr(0, 5) << std::endl;
 
             DataLogStream << "------------------------------------------------------------------" << std::endl;
             DataLogStream << "Image " << std::right << std::setw(5) << std::setfill('0') << idx << ": " << te_image_files[idx] << std::endl;
             DataLogStream << "Image Size (h x w): " << test_images[idx][0].nr() << "x" << test_images[idx][0].nc() << std::endl;
             DataLogStream << "Classification Time (s): " << elapsed_time.count() << std::endl;
-            DataLogStream << "Results: " << std::fixed << std::setprecision(4) << tr(0, 0) << ", " << tr(0, 3) << ", " << tr(0, 4) << ", " << tr(0, 5) << std::endl;
+            //DataLogStream << "Results: " << std::fixed << std::setprecision(4) << tr(0, 0) << ", " << tr(0, 3) << ", " << tr(0, 4) << ", " << tr(0, 5) << std::endl;
 
             for (jdx = 0; jdx < num_classes; ++jdx)
             {
