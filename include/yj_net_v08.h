@@ -8,7 +8,7 @@
 
 #include "input_array_image_pryamid.h"
 
-extern const uint32_t array_depth = 3;
+extern const uint32_t array_depth = 1;
 //extern const uint32_t secondary = 1;
 
 // --------------------------------- Conv Filter Setup ------------------------------------
@@ -108,7 +108,8 @@ using net_type = dlib::loss_mmod<con7<1,
     dlib::relu<dlib::bn_con<con2d<64,
 
     dlib::relu<dlib::bn_con<con15<32, con51<32,
-    mp2<dlib::input_rgb_image_pyramid<dlib::pyramid_down<5>>>
+    //mp2<dlib::input_rgb_image_pyramid<dlib::pyramid_down<5>>>
+    mp2<dlib::input_array_image_pyramid<dlib::pyramid_down<5>, array_depth>>
     >>>> >>> >>>> >>> >>> >>;
 
 using anet_type = dlib::loss_mmod<con7<1,
@@ -119,7 +120,8 @@ using anet_type = dlib::loss_mmod<con7<1,
     dlib::relu<dlib::affine<con2d<64,
 
     dlib::relu<dlib::affine<con15<32, con51<32,
-    mp2<dlib::input_rgb_image_pyramid<dlib::pyramid_down<5>>>
+    //mp2<dlib::input_rgb_image_pyramid<dlib::pyramid_down<5>>>
+    mp2<dlib::input_array_image_pyramid<dlib::pyramid_down<5>, array_depth>>
     >>>> >>> >>>> >>> >>> >>;
 
 // ----------------------------------------------------------------------------------------
