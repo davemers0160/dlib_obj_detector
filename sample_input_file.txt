@@ -14,8 +14,8 @@ yj_v1_
 
 #4 training data file: this is the file that contains the list of associated training data, text file format
 # text file format: 0 -> grouped boxes (default), 1 -> open images bounding box format
-#D:/Projects/object_detection_data/test_plane/plane_train_quarter_input.txt, 0
-D:/Projects/object_detection_data/open_images/test-box-annotations-bbox.csv, 1
+D:/Projects/object_detection_data/test_plane/plane_train_quarter_input.txt, 0
+#D:/Projects/object_detection_data/open_images/test-box-annotations-bbox.csv, 1
 
 #5 test data file: this is the file that contains the list of associated test data, text file format
 # text file format: 0 -> grouped boxes (default), 1 -> open images bounding box format
