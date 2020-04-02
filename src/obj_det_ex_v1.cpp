@@ -110,6 +110,7 @@ int main(int argc, char** argv)
 
     // data IO variables
     const std::string os_file_sep = "/";
+    std::string parse_filename;
     std::string program_root;
     std::string save_directory;
     std::string sync_save_location;
@@ -117,6 +118,9 @@ int main(int argc, char** argv)
     std::string results_save_location;
     std::string train_inputfile;
     std::string test_inputfile;
+    std::string train_class_name;
+    std::string trained_net_file;
+
     std::pair<std::string, uint8_t> train_input, test_input;
     std::string train_data_directory, test_data_directory;
     std::vector<std::vector<std::string>> training_file;
@@ -156,9 +160,6 @@ int main(int argc, char** argv)
 
     dlib::rand rnd;
     rnd = dlib::rand(time(NULL));
-
-    // set the learning rate multipliers: 0 means freeze the layers; r1 = learning rate multiplier, r2 = learning rate bias multiplier
-    //double r1 = 1.0, r2 = 1.0;
     
     // ----------------------------------------------------------------------------------------
    
@@ -168,8 +169,16 @@ int main(int argc, char** argv)
         std::cin.ignore();
         return 0;
     }
-
-    std::string parse_filename = argv[1];
+    else if (argc == 2)
+    {
+        parse_filename = argv[1];
+    }
+    else if (argc == 3)
+    {
+        parse_filename = argv[1];
+        train_class_name = argv[2];
+        trained_net_file = "../nets/yj_v10_HPC_final_net.dat";
+    }
 
     // parse through the supplied csv file
     parse_input_file(parse_filename, version, gpu, stop_criteria, tp, train_input, test_input, ci, target_size, filter_num, save_directory);
@@ -281,6 +290,9 @@ int main(int argc, char** argv)
         std::cout << "------------------------------------------------------------------" << std::endl;
         std::cout << "data_directory:        " << train_data_directory << std::endl;
 
+        std::cout << " Training Class Name: " << train_class_name << std::endl;
+        DataLogStream << " Training Class Name: " << train_class_name << std::endl;
+
         std::cout << train_input.first << std::endl;
         std::cout << "Training image sets to parse: " << training_file.size() << std::endl;
 
@@ -302,14 +314,16 @@ int main(int argc, char** argv)
         }
 
         // this is placeholder code for selecting a specific class, removing all other classes
-        std::string class_name = "test2";
+        //-----------------------------------------------------------------------------
         uint32_t img_size = train_images.size() - 1;
+        uint32_t label_size;
+
         for (int32_t idx = img_size; idx >=0 ; --idx)
         {
-            uint32_t label_size = train_labels[idx].size() - 1;
+            label_size = train_labels[idx].size() - 1;
             for (int32_t jdx = label_size; jdx >=0 ; --jdx)
             {
-                if (train_labels[idx][jdx].label != class_name)
+                if (train_labels[idx][jdx].label != train_class_name)
                 {
                     train_labels[idx].erase(train_labels[idx].begin() + jdx);
                 }
@@ -322,6 +336,7 @@ int main(int argc, char** argv)
                 tr_image_files.erase(tr_image_files.begin() + idx);
             }
         }
+        //-----------------------------------------------------------------------------
 
         stop_time = chrono::system_clock::now();
         elapsed_time = chrono::duration_cast<d_sec>(stop_time - start_time);
@@ -569,15 +584,7 @@ int main(int argc, char** argv)
 
         // load in the previously trained network 
         net_type tnet;
-        dlib::deserialize("../nets/yj_v10_HPC_final_net.dat") >> tnet;
-
-        // copy the filter values from the trained net to the new network
-        //dlib::copy_net<start_from, end_from, start_to>(from_net, to_net);
-        dlib::copy_net<2, 47, 2>(tnet, net);
-
-        // freeze the layers
-        double r1 = 0.0, r2 = 0.0;
-        dlib::set_learning_rate<2, 47>(net, r1, r2);
+        dlib::deserialize(trained_net_file) >> tnet;
 
         dlib::dnn_trainer<net_type, dlib::adam> trainer(net, dlib::adam(0.0001, 0.9, 0.99),  gpu);
         trainer.set_learning_rate(tp.intial_learning_rate);
@@ -590,6 +597,7 @@ int main(int argc, char** argv)
         // set the batch normalization stats window to something big
         dlib::set_all_bn_running_stats_window_sizes(net, 1000);
 
+        // initialize the random cropperr
         dlib::random_array_cropper cropper;
 
         cropper.set_seed(time(NULL));
@@ -655,11 +663,22 @@ int main(int argc, char** argv)
         std::cout << "------------------------------------------------------------------" << std::endl;
         std::cout << "Starting Training..." << std::endl;
 
-        // compare the nets after training to ensure that the training did not change the layer values
-        auto& t1 = dlib::layer<41>(tnet).layer_details();
-        auto& t2 = dlib::layer<41>(net).layer_details();
-        //dlib::tensor& t1 = dlib::layer<41>(tnet).layer_details().get_layer_params();
-        //dlib::tensor& t2 = dlib::layer<41>(net).layer_details().get_layer_params();
+        // do some fake trainining because when the trainer runs for the first time values get modified
+        // do this before you copy the values from one network to the other
+        cropper(ci.crop_num, train_images, train_labels, train_batch_samples, train_batch_labels);
+        for (idx = 0; idx < 2; ++idx)
+        {
+            trainer.train_one_step(train_batch_samples, train_batch_labels);
+        }
+
+        // copy the filter values from the trained net to the new network
+        // this has to be done after the trainer setup because it will initialize the values to random numbers
+        //dlib::copy_net<start_from, end_from, start_to>(from_net, to_net);
+        dlib::copy_net<2, 47, 2>(tnet, net);
+
+        // freeze the layers by setting the learning rates to zero
+        double r1 = 0.0, r2 = 0.0;
+        dlib::set_learning_rate<2, 47>(net, r1, r2);
 
         start_time = chrono::system_clock::now();
 
@@ -823,17 +842,11 @@ int main(int argc, char** argv)
 //  EVALUATE THE FINAL NETWORK PERFORMANCE
 //-----------------------------------------------------------------------------
 
-        // compare the nets after training to ensure that the training did not change the layer values
-        dlib::tensor& t3 = dlib::layer<45>(tnet).layer_details().get_layer_params();
-
-        dlib::tensor& t4 = dlib::layer<45>(net).layer_details().get_layer_params();
-
         // load the network from the saved file
         anet_type test_net;
 
         std::cout << std::endl << "Loading " << (sync_save_location + net_name) << std::endl;
         dlib::deserialize(sync_save_location + net_name) >> test_net;
-
 
         // In this section we want to evaluate the performance of the network against the training data
         // this should be displayed and then saved to the log file
