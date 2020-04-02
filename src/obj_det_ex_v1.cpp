@@ -48,11 +48,8 @@
 // dlib-contrib includes
 #include "array_image_operations.h"
 #include "random_array_cropper.h"
-
-
-// new copy and set learning rate includes
-//#include "copy_dlib_net.h"
-//#include "dlib_set_learning_rates.h"
+#include "copy_dlib_net.h"
+#include "dlib_set_learning_rates.h"
 
 // -------------------------------GLOBALS--------------------------------------
 
@@ -305,26 +302,26 @@ int main(int argc, char** argv)
         }
 
         // this is placeholder code for selecting a specific class, removing all other classes
-        //std::string class_name = "test2";
-        //uint32_t img_size = train_images.size() - 1;
-        //for (int32_t idx = img_size; idx >=0 ; --idx)
-        //{
-        //    uint32_t label_size = train_labels[idx].size() - 1;
-        //    for (int32_t jdx = label_size; jdx >=0 ; --jdx)
-        //    {
-        //        if (train_labels[idx][jdx].label != class_name)
-        //        {
-        //            train_labels[idx].erase(train_labels[idx].begin() + jdx);
-        //        }
-        //    }
+        std::string class_name = "test2";
+        uint32_t img_size = train_images.size() - 1;
+        for (int32_t idx = img_size; idx >=0 ; --idx)
+        {
+            uint32_t label_size = train_labels[idx].size() - 1;
+            for (int32_t jdx = label_size; jdx >=0 ; --jdx)
+            {
+                if (train_labels[idx][jdx].label != class_name)
+                {
+                    train_labels[idx].erase(train_labels[idx].begin() + jdx);
+                }
+            }
 
-        //    if (train_labels[idx].size() == 0)
-        //    {
-        //        train_labels.erase(train_labels.begin() + idx);
-        //        train_images.erase(train_images.begin() + idx);
-        //        tr_image_files.erase(tr_image_files.begin() + idx);
-        //    }
-        //}
+            if (train_labels[idx].size() == 0)
+            {
+                train_labels.erase(train_labels.begin() + idx);
+                train_images.erase(train_images.begin() + idx);
+                tr_image_files.erase(tr_image_files.begin() + idx);
+            }
+        }
 
         stop_time = chrono::system_clock::now();
         elapsed_time = chrono::duration_cast<d_sec>(stop_time - start_time);
@@ -566,14 +563,21 @@ int main(int argc, char** argv)
         }
         */
         // ------------------------------------------------------------------------------------
-
-
+        
         // Now we are ready to create our network and trainer.
         net_type net = config_net<net_type>(options, filter_num);
 
-        // The MMOD loss requires that the number of filters in the final network layer equal
-        // options.detector_windows.size().  So we set that here as well.
-        //net.subnet().layer_details().set_num_filters(options.detector_windows.size());
+        // load in the previously trained network 
+        net_type tnet;
+        dlib::deserialize("../nets/yj_v10_HPC_final_net.dat") >> tnet;
+
+        // copy the filter values from the trained net to the new network
+        //dlib::copy_net<start_from, end_from, start_to>(from_net, to_net);
+        dlib::copy_net<2, 47, 2>(tnet, net);
+
+        // freeze the layers
+        double r1 = 0.0, r2 = 0.0;
+        dlib::set_learning_rate<2, 47>(net, r1, r2);
 
         dlib::dnn_trainer<net_type, dlib::adam> trainer(net, dlib::adam(0.0001, 0.9, 0.99),  gpu);
         trainer.set_learning_rate(tp.intial_learning_rate);
@@ -650,6 +654,13 @@ int main(int argc, char** argv)
 
         std::cout << "------------------------------------------------------------------" << std::endl;
         std::cout << "Starting Training..." << std::endl;
+
+        // compare the nets after training to ensure that the training did not change the layer values
+        auto& t1 = dlib::layer<41>(tnet).layer_details();
+        auto& t2 = dlib::layer<41>(net).layer_details();
+        //dlib::tensor& t1 = dlib::layer<41>(tnet).layer_details().get_layer_params();
+        //dlib::tensor& t2 = dlib::layer<41>(net).layer_details().get_layer_params();
+
         start_time = chrono::system_clock::now();
 
         while(stop < 0)
@@ -811,6 +822,11 @@ int main(int argc, char** argv)
 //-----------------------------------------------------------------------------
 //  EVALUATE THE FINAL NETWORK PERFORMANCE
 //-----------------------------------------------------------------------------
+
+        // compare the nets after training to ensure that the training did not change the layer values
+        dlib::tensor& t3 = dlib::layer<45>(tnet).layer_details().get_layer_params();
+
+        dlib::tensor& t4 = dlib::layer<45>(net).layer_details().get_layer_params();
 
         // load the network from the saved file
         anet_type test_net;

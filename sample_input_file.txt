@@ -1,13 +1,13 @@
 # data file for loading information into dlib based dnn projects
 
 #0 version name: this is used as the prepend to all files, must end with "_"
-yj_v1_
+yj_v10c_
 
 #1 GPU: this tells the code which GPU to target
 0
 
 #2 stopping criteria: max training hours, max training steps
-0.03, 1000000
+0.02, 1000000
 
 #3 training parameters: initial_learning_rate, final_learning_rate, lr_shrink_factor, steps_wo_progress
 0.0001, 0.00000001, 0.1, 3000
@@ -22,13 +22,13 @@ D:/Projects/object_detection_data/test_plane/plane_train_quarter_input.txt, 0
 D:/Projects/object_detection_data/test_plane/plane_train_quarter_input.txt, 0
 
 #6 training crop info: number of crops, crop_height, crop_width, max_rot_angle
-10, 100, 100, 15.0
+20, 100, 100, 15.0
 
 #7 bounding box configuration: min_target_size, max_target_size
 35, 70
 
 #8 number of filters to use per layer: must be >= to the number of filters in the network
-1, 10, 10, 6, 5, 4, 3
+1, 128,128,64, 128, 64, 64,64,32, 64, 32, 32,32,16, 32
 
 #9 root location where the results will be saved -> must have the following folders: nets, results, result_images
 ../results/
