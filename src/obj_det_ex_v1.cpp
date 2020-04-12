@@ -640,14 +640,6 @@ int main(int argc, char** argv)
         DataLogStream << trainer << std::endl;
         DataLogStream << "------------------------------------------------------------------" << std::endl;
 
-        // show the network to verify that it looks correct
-        std::cout << "------------------------------------------------------------------" << std::endl;
-        std::cout << "Net Name: " << net_name << std::endl;
-        std::cout << net << std::endl;
-
-        DataLogStream << "Net Name: " << net_name << std::endl;
-        DataLogStream << net << std::endl;
-        DataLogStream << "------------------------------------------------------------------" << std::endl;
 
 //-----------------------------------------------------------------------------
 // TRAINING START
@@ -681,6 +673,16 @@ int main(int argc, char** argv)
         double r1 = 0.0, r2 = 0.0;
         dlib::set_learning_rate<2, 47>(net, r1, r2);
 
+        // show the network to verify that it looks correct
+        std::cout << "------------------------------------------------------------------" << std::endl;
+        std::cout << "Net Name: " << net_name << std::endl;
+        std::cout << net << std::endl;
+
+        DataLogStream << "Net Name: " << net_name << std::endl;
+        DataLogStream << net << std::endl;
+        DataLogStream << "------------------------------------------------------------------" << std::endl;
+
+        // start the timer
         start_time = chrono::system_clock::now();
 
         while(stop < 0)
