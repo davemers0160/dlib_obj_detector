@@ -178,7 +178,7 @@ int main(int argc, char** argv)
     {
         parse_filename = argv[1];
         train_class_name = argv[2];
-        trained_net_file = "../nets/yj_v10_HPC_final_net.dat";
+        trained_net_file = "nets/yj_v10_HPC_final_net.dat";
     }
 
     // parse through the supplied csv file
