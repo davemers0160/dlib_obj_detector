@@ -303,6 +303,29 @@ int main(int argc, char** argv)
             load_oid_data(training_file, train_data_directory, train_images, train_labels, tr_image_files);
             break;
         }
+
+        // this is placeholder code for selecting a specific class, removing all other classes
+        //std::string class_name = "test2";
+        //uint32_t img_size = train_images.size() - 1;
+        //for (int32_t idx = img_size; idx >=0 ; --idx)
+        //{
+        //    uint32_t label_size = train_labels[idx].size() - 1;
+        //    for (int32_t jdx = label_size; jdx >=0 ; --jdx)
+        //    {
+        //        if (train_labels[idx][jdx].label != class_name)
+        //        {
+        //            train_labels[idx].erase(train_labels[idx].begin() + jdx);
+        //        }
+        //    }
+
+        //    if (train_labels[idx].size() == 0)
+        //    {
+        //        train_labels.erase(train_labels.begin() + idx);
+        //        train_images.erase(train_images.begin() + idx);
+        //        tr_image_files.erase(tr_image_files.begin() + idx);
+        //    }
+        //}
+
         stop_time = chrono::system_clock::now();
         elapsed_time = chrono::duration_cast<d_sec>(stop_time - start_time);
 
