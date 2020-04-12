@@ -247,5 +247,7 @@ gorgon_save/
 *.tgz
 *.7z
 
-
+b0*/
+b1*/
+b2*/
 
