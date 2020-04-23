@@ -22,10 +22,10 @@ D:/Projects/object_detection_data/test_plane/plane_train_quarter_input.txt, 0
 D:/Projects/object_detection_data/test_plane/plane_train_quarter_input.txt, 0
 
 #6 training crop info: number of crops, crop_height, crop_width, max_rot_angle
-20, 100, 100, 15.0
+20, 60, 60, 15.0
 
 #7 bounding box configuration: min_target_size, max_target_size
-35, 70
+40, 40
 
 #8 number of filters to use per layer: must be >= to the number of filters in the network
 1, 128,128,64, 128, 64, 64,64,32, 64, 32, 32,32,16, 32
