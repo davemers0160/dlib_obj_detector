@@ -178,7 +178,11 @@ int main(int argc, char** argv)
     {
         parse_filename = argv[1];
         train_class_name = argv[2];
+#if defined(_WIN32) | defined(__WIN32__) | defined(__WIN32) | defined(_WIN64) | defined(__WIN64)
+        trained_net_file = "../nets/yj_v10_HPC_final_net.dat";
+#else
         trained_net_file = "nets/yj_v10_HPC_final_net.dat";
+#endif
     }
 
     // parse through the supplied csv file
@@ -291,8 +295,8 @@ int main(int argc, char** argv)
         std::cout << "------------------------------------------------------------------" << std::endl;
         std::cout << "data_directory:        " << train_data_directory << std::endl;
 
-        std::cout << " Training Class Name: " << train_class_name << std::endl;
-        DataLogStream << " Training Class Name: " << train_class_name << std::endl;
+        std::cout << "Training Class Name: " << train_class_name << std::endl;
+        DataLogStream << "Training Class Name: " << train_class_name << std::endl;
 
         std::cout << train_input.first << std::endl;
         std::cout << "Training image sets to parse: " << training_file.size() << std::endl;
