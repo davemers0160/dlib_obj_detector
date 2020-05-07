@@ -667,7 +667,8 @@ int main(int argc, char** argv)
         {
             trainer.train_one_step(train_batch_samples, train_batch_labels);
         }
-
+        net.clean();
+        
         // copy the filter values from the trained net to the new network
         // this has to be done after the trainer setup because it will initialize the values to random numbers
         //dlib::copy_net<start_from, end_from, start_to>(from_net, to_net);
