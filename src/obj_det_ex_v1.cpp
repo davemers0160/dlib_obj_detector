@@ -23,6 +23,7 @@
 #include "get_platform.h"
 #include "get_current_time.h"
 #include "num2string.h"
+#include "file_ops.h"
 
 // Net Version
 #include "yj_net_v10.h"
