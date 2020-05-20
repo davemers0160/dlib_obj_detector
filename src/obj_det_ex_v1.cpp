@@ -26,7 +26,8 @@
 #include "file_ops.h"
 
 // Net Version
-#include "yj_net_v10.h"
+//#include "yj_net_v10.h"
+#include "tfd_net_v01.h"
 #include "load_data.h"
 #include "load_oid_data.h"
 #include "eval_net_performance.h"
@@ -49,6 +50,7 @@
 // dlib-contrib includes
 #include "array_image_operations.h"
 #include "random_array_cropper.h"
+#include "image_noise_functions.h"
 
 
 // new copy and set learning rate includes
@@ -149,6 +151,8 @@ int main(int argc, char** argv)
     uint64_t one_step_calls = 0;
     uint64_t epoch = 0;
     uint64_t index = 0;   
+    
+    double std = 2.0;
 
     dlib::rgb_pixel color;
     dlib::matrix<dlib::rgb_pixel> rgb_img;
@@ -360,7 +364,6 @@ int main(int argc, char** argv)
 
         //DataLogStream << "Number of Found Train Objects: " << num_found_train_images << std::endl;
         //DataLogStream << "Number of Ignored Train Objects: " << num_ignored_train_images << std::endl<<std::endl;
-
 
         // for debugging to view the images
         //for (idx = 0; idx < training_file.size(); ++idx)
@@ -660,6 +663,12 @@ int main(int argc, char** argv)
             {
                 //cropper.file_append(num_crops, train_data_directory, training_file, mini_batch_samples, mini_batch_labels);
                 cropper(ci.crop_num, train_images, train_labels, train_batch_samples, train_batch_labels);
+
+                // apply some noise to the image
+                for (auto&& tc : train_batch_samples)
+                {
+                    apply_poisson_noise(tc, std, rnd, 0.0, 255.0);
+                }
 
 #if defined(_DEBUG)
 /*                
