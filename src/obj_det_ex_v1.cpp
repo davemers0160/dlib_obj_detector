@@ -27,7 +27,7 @@
 
 // Net Version
 //#include "yj_net_v10.h"
-#include "tfd_net_v01.h"
+#include "tfd_net_v02.h"
 #include "load_data.h"
 #include "load_oid_data.h"
 #include "eval_net_performance.h"

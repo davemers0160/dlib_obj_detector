@@ -120,10 +120,9 @@ using net_type = dlib::loss_mmod<con7<1,
 
     dlib::relu<dlib::bn_con<con5d<32, 
     dlib::relu<dlib::bn_con<con5d<32, 
-    dlib::relu<dlib::bn_con<con5d<32,
     
     dlib::tag10<dlib::input_array_image_pyramid<dlib::pyramid_down<6>, array_depth>>
-    >>> >>> >>> >>> >>> >>> >>;
+    >>> >>> >>> >>> >>> >>;
 
 using anet_type = dlib::loss_mmod<con7<1,
 

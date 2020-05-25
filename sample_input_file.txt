@@ -1,7 +1,7 @@
 # data file for loading information into dlib based dnn projects
 
 #0 version name: this is used as the prepend to all files, must end with "_"
-yj_v1_
+tfd_v1_
 
 #1 GPU: this tells the code which GPU to target
 0
@@ -14,18 +14,18 @@ yj_v1_
 
 #4 training data file: this is the file that contains the list of associated training data, text file format
 # text file format: 0 -> grouped boxes (default), 1 -> open images bounding box format
-D:/Projects/object_detection_data/test_plane/plane_train_quarter_input.txt, 0
+D:/Projects/object_detection_data/FaceDetection/thermal_face_test_small_v1.txt, 0
 #D:/Projects/object_detection_data/open_images/test-box-annotations-bbox.csv, 1
 
 #5 test data file: this is the file that contains the list of associated test data, text file format
 # text file format: 0 -> grouped boxes (default), 1 -> open images bounding box format
-D:/Projects/object_detection_data/test_plane/plane_train_quarter_input.txt, 0
+D:/Projects/object_detection_data/FaceDetection/thermal_face_test_small_v1.txt, 0
 
 #6 training crop info: number of crops, crop_height, crop_width, max_rot_angle
 10, 100, 100, 15.0
 
 #7 bounding box configuration: min_target_size, max_target_size
-35, 70
+35, 40
 
 #8 number of filters to use per layer: must be >= to the number of filters in the network
 1, 10, 10, 6, 5, 4, 3
