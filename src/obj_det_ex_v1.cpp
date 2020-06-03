@@ -507,7 +507,7 @@ int main(int argc, char** argv)
             dlib::cuda::set_device(gpu[0]);
 
         // For further details see the mmod_options documentation.
-        dlib::mmod_options options(train_labels, target_size.second, target_size.first, 0.75);
+        dlib::mmod_options options(train_labels, target_size.second, target_size.first, 0.90);
 
         // example of how to push back a custion window
         // options.detector_windows.push_back(dlib::mmod_options::detector_window_details(114, 103));
